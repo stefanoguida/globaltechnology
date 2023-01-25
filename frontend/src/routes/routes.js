@@ -51,6 +51,7 @@ const Projects  = () => import('@/views/Pages/Projects.vue');
 const Contracts = () => import('@/views/Pages/Contracts.vue');
 const Offers = () => import('@/views/Pages/Offers.vue');
 const Orders    = () => import('@/views/Pages/Orders.vue');
+const OrderRows    = () => import('@/views/Pages/OrderRows.vue');
 const Services  = () => import('@/views/Pages/Services.vue');
 
 
@@ -281,6 +282,11 @@ const GlobalTechPages = {
       path: 'orders',
       name: 'orders',
       component: Orders
+    },
+    {
+      path: 'orderrows',
+      name: 'order-rows',
+      component: OrderRows
     },
     {
       path: 'services',

@@ -10,15 +10,14 @@ const userService = new Services.User()
 
 const modelMapping = {
     contratto: "contracts",
+    offerta: "offers",
     cliente: "customers",
     progetto: "projects",
     servizio: "services",
     ordine: "orders",
     riga_ordine: "orderRows",
     pagamento_ordine: "orderPayments",
-    stato_ordine: "orderStatus",
-    stato_contratto: "contractStatus",
-    stato_progetto: "projectStatus",
+    stato: "status",
 }
 
 const state = {
@@ -62,23 +61,20 @@ const getters = {
     customerSelectOptions(state){
         return state.customers.records.map( r => ({text: r.ragione_sociale, value: r.id}) )
     },
-    statusProjectSelectOptions(state){
-        return state.projectStatus.records.map( r => ({text: r.name, value: r.code}) )
+    projectSelectOptions(state){
+        return state.projects.records.map( r => ({text: r.impianto, value: r.id}) )
+    },
+    statusSelectOptions(state){
+        return state.status.records.map( r => ({text: r.name, value: r.id}) )
+    },
+    servicesSelectOptions(state){
+        return state.services.records.map( r => ({text: r.name, value: r.id}) )
     },
     projectSelectOptions(state){
         return state.projects.records.map( r => ({text: r.impianto, value: r.id}) )
     },
-    statusContractsSelectOptions(state){
-        return state.contractStatus.records.map( r => ({text: r.name, value: r.id}) )
-    },
     services(state){
         return state.services.records
-    },
-    contractStatus(state){
-        return state.contractStatus.records.map(item => ({id:item.id, code:item.code, name:item.name}))
-    },
-    projectStatus(state){
-        return state.projectStatus.records.map(item => ({id:item.id, code:item.code, name:item.name}))
     },
 }
 
@@ -196,10 +192,10 @@ const actions = {
         }
     },
 
-    async [__.UPLOAD]({commit}, {type, id, file}) {
+    async [__.UPLOAD]({commit}, data) {
         try {
-            const response = await baseService.upload(type, id, file)
-            commit(__.UPLOAD,{type, id, file})
+            const response = await baseService.upload(data)
+            commit(__.UPLOAD,data)
             return response
         }
         catch ( error ) {
@@ -324,7 +320,7 @@ const mutations = {
         state.kpi.running_projects = data.toString()
     },
     [__.GET_TOTAL_KW](state, data) {
-        state.kpi.total_kw = data.toString()
+        state.kpi.total_kw = new Intl.NumberFormat('it-IT').format(data)
     },
     [__.GET_TOTAL_INVOICED](state, data) {
         state.kpi.total_invoiced = Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(data)

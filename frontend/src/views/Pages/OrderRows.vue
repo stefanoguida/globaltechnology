@@ -27,7 +27,7 @@
               <base-input v-else-if="field.type == 'currency'" :label="field.label" v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label">
                 <template #append>€</template>
               </base-input>
-              <base-input v-else-if="field.type == 'date'" type="date" :label="field.label" v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label" :formatter=" val => moment(val).format('DD-MM-YYYY') "></base-input>
+              <base-input v-else-if="field.type == 'date'" type="date" :label="field.label" v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label" ></base-input>
               <base-input v-else-if="field.type == 'textarea'" :label="field.label" alternative class="mb-3" :placeholder="field.label">
                 <textarea v-model="modal.data[field.prop]" class="form-control" rows="3"></textarea>
               </base-input>
@@ -43,46 +43,9 @@
 
             <div class="text-right">
               <base-button type="primary" class="my-4" @click="modal.show = false">Annulla</base-button>
-              <base-button type="primary" class="my-4" @click=" () => modal.type == 'upload' ? handleSaveFile() : handleSave() ">Salva</base-button>
+              <base-button type="primary" class="my-4" @click=" () => modal.type == 'upload' ? handleSaveFile() : handleSaveCustomer() ">Salva</base-button>
             </div>
           </form>
-        </template>
-      </card>
-    </modal>
-
-    <!-- PDF Modal -->
-    <modal :show.sync="pdfmodal.show" size="lg" body-classes="p-0">
-      <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
-        <template>
-          <div class="text-muted mb-4">
-            <small>{{pdfmodal.title}}</small>
-          </div>
-          <el-row>
-            <el-col v-for="file in pdfmodal.data" :span="8">
-              <el-card>
-                <template slot="header">
-                  <pdf :src="file.path" :page=1></pdf>
-                </template>
-                <div>
-                  Questo è il body
-                  <div class="d-flex">
-                    <base-button type="primary" size="sm" icon>
-                      <a :href="file.path" target="_blank"><i class="text-white fa fa-eye"></i></a>
-                    </base-button>
-                    <base-button type="danger" @click="handleDeleteFile(file)" size="sm" icon>
-                      <i class="text-white fa fa-trash"></i>
-                    </base-button>
-                  </div>
-                </div>
-              </el-card>
-            </el-col>
-          </el-row>
-          <div class="d-flex" style="margin-top: 10px;">
-              <file-input initialLabel="carica file" @change="handleFileChange" class="custom-control-inline"></file-input>
-              <base-button type="primary" @click.native="handleSaveFile" :disabled="!pdfmodal.newFile.name">
-                <i class="fa fa-upload"></i>
-              </base-button>
-            </div>
         </template>
       </card>
     </modal>
@@ -103,53 +66,34 @@
                 </el-select>
 
                 <div>
-                  <el-form :inline="true" :model="filters">
-                    <el-form-item>
-                      <el-select placeholder="Cliente" v-model="filters.cliente" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.text"></el-option>
-                      </el-select>
-                    </el-form-item>
-  
-                    <el-form-item>
-                      <el-select placeholder="Progetto" v-model="filters.id_progettot" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
-                      </el-select>
-                    </el-form-item>
-  
-                    <el-form-item>
-                      <el-select placeholder="Stato" v-model="filters.id_stato" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="status in statusOrderSelectOptions" :key="status.value" :label="status.text" :value="status.value"></el-option>
-                      </el-select>
-                    </el-form-item>
-                    
-                    <el-form-item>
-                      <el-select placeholder="Servizio" v-model="filters.id_servizio" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="service in servicesOrderSelectOptions" :key="service.value" :label="service.text" :value="service.value"></el-option>
-                      </el-select>
-                    </el-form-item>
-
-                    <el-form-item>
-                      <base-button type="primary" @click="handleSearch">Cerca</base-button>
-                    </el-form-item>
-
-                  </el-form >
+                  <base-input v-model="searchQuery" prepend-icon="fas fa-search" placeholder="Search..."> </base-input>
                 </div>
-
               </div>
 
               <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" highlight-current-row @sort-change="sortChange" @current-change="handleRowSelect">
                 <!-- All columns -->
                 <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter"></el-table-column>
+                
+                <!-- Icon Files Column -->
+                <el-table-column align="right" label="File" width="80px">
+                  <div slot-scope="{$index, row}" class="d-flex" v-if="row.files">
+                    <base-button 
+                      class="btn-tooltip"
+                      type="danger" 
+                      size="sm" 
+                      icon 
+                      @click.native="handleShowFiles(row)"
+                    >
+                      <i class="text-white fa fa-file-pdf"></i>
+                    </base-button>
+                  </div>
+                </el-table-column>
 
                 <!-- Action Column -->
                 <el-table-column align="right" label="Actions" min-width="100px">
                   <div slot-scope="{$index, row}" class="d-flex">
-                    <base-button @click.native="handleShowPDF(row)" type="primary" size="sm" icon >
-                      <i class="text-white fa fa-file-pdf"></i>
+                    <base-button @click.native="handleShowDetails(row)" type="primary" size="sm" icon >
+                      <i class="text-white fa fa-info"></i>
                     </base-button>
                     <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                       <i class="text-white ni ni-ruler-pencil"></i>
@@ -166,6 +110,10 @@
             <div slot="footer" class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap">
               <div class="">
                 <p class="card-category">
+                  <!-- Showing {{ from + 1 }} to {{ to }} of {{ total }} entries -->
+                  <!-- <span v-if="selectedRows.length">
+                    &nbsp; &nbsp; {{selectedRows.length}} righe selezionate
+                  </span> -->
                 </p>
               </div>
               <base-pagination class="pagination-no-border" v-model="pagination.currentPage" :per-page="pagination.perPage" :total="total"></base-pagination>
@@ -175,11 +123,79 @@
         </div>
       </div>
 
+      <!-- Files table -->  
+      <div class="container-fluid mt--6 col-4" v-if="showFiles">
+        <div>
+          <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
+            <div class="card-header border-0">
+              <div class="row">
+                <div class="col-6">
+                  <h3 class="mb-0">Files per l'ordine di {{ selectedRow.progetto }}</h3>
+                </div>
+                <div class="col-6 text-right">
+                  <el-tooltip content="Export" placement="top">
+                    <base-button type="neutral" icon size="sm" @click="openUploadFileModal">
+                      <span class="btn-inner--icon"><i class="fa-cloud-upload-alt fas"></i></span>
+                      <span class="btn-inner--text">Carica</span>
+                    </base-button>
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+            <div>
+              <el-table :data="reactiveFileData" row-key="id" header-row-class-name="thead-light" ref="fileTable">
+                <!-- Files Column -->
+                <el-table-column align="right" label="File">
+                  <div slot-scope="{$index, row}" class="d-flex">
+                    <base-button class="btn-tooltip" type="danger" size="sm" icon @click.native="showPDFViewver(row)">
+                      <a :href="row.path" target="_blank"><i class="text-white fa fa-file-pdf"></i></a>
+                      <!-- <i class="text-white fa fa-file-pdf"></i> -->
+                    </base-button>
+                  </div>
+                </el-table-column>
+                <el-table-column label="nome" :formatter="(row) => row.path.split('/').pop()"></el-table-column>
+
+                <!-- Action Column -->
+                <el-table-column align="right" label="Actions">
+                  <div slot-scope="{$index, row}" class="d-flex">
+                    <base-button @click.native="handleDeleteFile($index, row)" class="remove btn-link" type="danger" size="sm" icon>
+                      <i class="text-white fa fa-trash"></i>
+                    </base-button>
+                  </div>
+                </el-table-column>
+              </el-table>
+
+            </div>
+          </card>
+        </div>
+      </div>
+      <!-- Details table -->  
+      <div class="container-fluid mt--6 col-4" v-if="showDetails">
+        <div>
+          <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
+            <div class="card-header border-0">
+              <div class="row">
+                <div class="col-6">
+                  <h3 class="mb-0">Dettagli per l'ordine di {{ selectedRow.progetto }}</h3>
+                </div>
+              </div>
+            </div>
+            <div>
+              <el-table :data="detailsData" row-key="id" header-row-class-name="thead-light" ref="fileTable">
+                <!-- All columns -->
+                <el-table-column v-for="column in Object.keys(detailsData[0])" :key="column.label" v-bind="column" :formatter="column.formatter"></el-table-column>
+              </el-table>
+
+            </div>
+          </card>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
 <script>
-import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card } from 'element-ui';
+import { Table, TableColumn, Select, Option } from 'element-ui';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import FileInput from '@/components/Inputs/FileInput'
 import { BasePagination } from '@/components';
@@ -200,33 +216,22 @@ export default {
     BasePagination,
     RouteBreadCrumb,
     FileInput,
-    [Row.name]: Row,
-    [Col.name]: Col,
-    [Card.name]: Card,
     [Select.name]: Select,
     [Option.name]: Option,
-    [Form.name]: Form,
-    [FormItem.name]: FormItem,
-    [DatePicker.name]: DatePicker,
     [Table.name]: Table,
     [TableColumn.name]: TableColumn
   },
+  props: ['id'],
   data() {
     return {
-      model: 'riga_ordine',
+      model: 'ordine',
       title: 'Ordini',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_ordine','id_progetto','id_stato','id_servizio'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato'],
       tableColumns: [],
       tableData: [],
       tableDataCSSClassBase: 'container-fluid mt--6 col-12',
       tableDataCSSClass: 'container-fluid mt--6 col-12',
-      filters: {
-        cliente: '',
-        id_progetto: '',
-        id_stato: '',
-        id_servizio: ''
-      },
       fileData: [],
       detailsData:[],
       showDetails: false,
@@ -237,22 +242,12 @@ export default {
       },
       modal: {
         fields:[],
-        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_ordine','id_progetto','id_stato','id_servizio','cliente'],
+        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','cliente'],
         show: false,
         type: '', //insert|update
         title: '',
         data: {}
-      },
-      pdfmodal: {
-        show: false,
-        title: 'Gestisci file',
-        data: [],
-        newFile: {}
-      },
-      projectSelectOptions:[],
-      statusOrderSelectOptions:[],
-      servicesOrderSelectOptions:[],
-      customerSelectOptions:[],
+      }
     };
   },
   computed: {
@@ -271,28 +266,20 @@ export default {
     )
   },
   methods: {
-    handleSearch() {
-      this.tableData = this.$store.state.orderRows.records
-      .filter( el => Object.entries(this.filters).every( f => f[1] ? el[f[0]] == f[1] : true))
-    },
     async fetchData( ) {
       
       await this.$store.dispatch(__.GETALL,this.model)
       await this.$store.dispatch(__.GETALL,'progetto')
-      await this.$store.dispatch(__.GETALL,'cliente')
-      await this.$store.dispatch(__.GETALL,'servizio')
       await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'ordine'}]})
 
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusOrderSelectOptions = this.$store.getters.statusSelectOptions
-      this.servicesOrderSelectOptions = this.$store.getters.servicesSelectOptions
-      this.customerSelectOptions = this.$store.getters.customerSelectOptions
 
-      this.modal.fields = this.$store.state.orderRows.fields
+      this.modal.fields = this.$store.state.orders.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
-          case 'data_arrivo_merce':
+          case 'data_consegna':
             return {
               type: 'date',
               prop: f, 
@@ -312,34 +299,9 @@ export default {
               label: f.replace(/^\w/, c => c.toUpperCase()),
               options: this.statusOrderSelectOptions
             }
-          case 'servizio':
-            return {
-              type: 'select',
-              prop: 'id_servizio', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
-              options: this.servicesOrderSelectOptions
-            }
           case 'importo':
             return {
               type: 'currency',
-              prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
-            }
-          case 'costo':
-            return {
-              type: 'currency',
-              prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
-            }
-          case 'costo_spedizione':
-            return {
-              type: 'currency',
-              prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
-            }
-          case 'descrizione':
-            return {
-              type: 'textarea',
               prop: f, 
               label: f.replace(/^\w/, c => c.toUpperCase())
             }
@@ -352,7 +314,7 @@ export default {
         }
       })
 
-      this.tableColumns = this.$store.state.orderRows.fields
+      this.tableColumns = this.$store.state.orders.fields
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -363,23 +325,17 @@ export default {
               sortable: true,
               label: f.replace(/^\w/, c => c.toUpperCase())
             }
-          case 'data_arrivo_merce':
-            return {
-              formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('YYYY-MM-DD') : '',
-              prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
-            }
           default: 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
               sortable: true,
-              label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace(/^\w/, c => c.toUpperCase()),
             }
           }
         })
       
-      this.tableData = this.$store.state.orderRows.records
+      this.tableData = this.$store.state.orders.records
 
       // this.$store.state.file.records.map( file => {
       //   const progetto = (this.$store.state.projects.records.filter( i => i.id == file.progetto ).pop() || {}).impianto
@@ -393,13 +349,19 @@ export default {
     handleRowSelect( row ){
       this.selectedRow = row
     },
-    async handleShowPDF( row ) {
-      await this.$store.dispatch(__.GETWHERE, {model: 'file', cond: [{field:"id_progetto", op:"=", value:row.id_progetto},{field:"tipo", op:"=", value:"ordine"}]})
-      this.pdfmodal.data = this.$store.state.file.records
-      this.pdfmodal.show = true
+    handleShowFiles ( row ) {
+      this.fileData = !_.isEqual(this.fileData, row.files) && row.files ? row.files : []
+      this.showFiles = this.fileData.length
+      this.tableDataCSSClass = this.showFiles ? 'container-fluid mt--6 col-8' : this.tableDataCSSClassBase
     },
     handleShowDetails ( row ) {
-      this.$router.push('orderrows')
+      console.log(row)
+      this.detailsData = !_.isEqual(this.detailsData, this.$store.state.orderRows.records) ? this.$store.state.orderRows.records : []
+      this.showDetails = this.detailsData.length
+      this.tableDataCSSClass = this.showDetails ? 'container-fluid mt--6 col-8' : this.tableDataCSSClassBase
+    },
+    showPDFViewver(row){
+      this.pdf_path = row.path
     },
     openCreateModal(){
       this.modal.type = 'insert'
@@ -417,9 +379,6 @@ export default {
             case "stato":
               a[c[0]] = (this.statusOrderSelectOptions.filter( r => r.text == c[1]).pop()).value
             break;
-            case "servizio":
-              a[c[0]] = (this.servicesOrderSelectOptions.filter( r => r.text == c[1]).pop()).value
-            break;
           default:
             a[c[0]] = c[1]
             break;
@@ -430,51 +389,33 @@ export default {
       this.modal.show = true
       this.modal.title = 'Modifica ordine'
     },
-    async handleSave () {
+    openUploadFileModal( row ) {
+      this.modal.type = 'upload'
+      this.modal.data.file = {}
+      this.modal.condition = [{field: 'id', op: '=', value: row.id}]
+      this.modal.show = true
+      this.modal.title = 'Aggiungi file a '
+    },
+    async handleSaveCustomer () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
-      let {id, trec, created_at, created_by, updated_at, updated_by, cliente, servizio, progetto, stato,  ...filteredData } = this.modal.data
-      let {id_progetto, id_stato, importo, ...detailsData} = filteredData
-      let head = {
-        model: 'ordine', 
-        payload: {id_progetto, id_stato, importo}, 
-        cond: method === __.UPDATE ? [{field:"id", op:"=", value:filteredData.id_ordine}] : []
+      const data = {
+        model: this.model, 
+        payload: this.modal.data, 
+        cond: this.modal.condition || []
       }
-      let response = await this.$store.dispatch(method, head)
-
+      const response = await this.$store.dispatch(method, data)
       if ( response.error ) {
         this.$notify({type:'danger', message:response.message})
         this.modal = { ...this.modal, type: '', title: '', data: {} }
       }
       else {
-        let details = {
-          model: this.model, 
-          payload: method === __.INSERT ? {...detailsData, id_ordine: response.data.insertId} : detailsData, 
-          cond: this.modal.condition || []
-        }
-        console.log(details, response)
-        response = await this.$store.dispatch(method, details)
-        
-        if ( response.error ) {
-          this.$notify({type:'danger', message:response.message})
-          this.modal = { ...this.modal, type: '', title: '', data: {} }
-        }
-        else {
-          this.$notify({type:'success', message: `Contratto salvato correttamente`})
-          await this.fetchData()
-          this.modal.show = false
-        }
+        this.$notify({type:'success', message: `Contratto salvato correttamente`})
+        await this.fetchData()
+        this.modal.show = false
       }
-      
     },
     async handleSaveFile () {
-
-      const data = {
-        type:'ordine', 
-        id: this.selectedRow.id_progetto, 
-        id_riferimento: this.selectedRow.id_ordine, 
-        file: this.pdfmodal.newFile 
-      }
-      const res = await this.$store.dispatch(__.UPLOAD, data)
+      const res = await this.$store.dispatch(__.UPLOAD,{type:'ordine', id : this.selectedRow.id, file: this.modal.data.file })
       if (res.error) {
         swal.fire({
           title: `Attenzione`,
@@ -497,9 +438,7 @@ export default {
           },
           icon: 'success'
         })
-
-        await this.$store.dispatch(__.GETWHERE, {model: 'file', cond: [{field:"id_progetto", op:"=", value:this.selectedRow.id_progetto},{field:"tipo", op:"=", value:"ordine"}]})
-        this.pdfmodal.data = this.$store.state.file.records
+        this.refreschFileData()
       }
     },
     handleDelete(index, row) {
@@ -548,7 +487,7 @@ export default {
       const idx = this.tableData.findIndex( t => t.id == this.selectedRow.id)
       this.fileData = this.tableData[idx].files
     },
-    handleDeleteFile( file ){
+    handleDeleteFile( fileIndex, file ){
       swal.fire({
         title: 'Sicuro?',
         text: `Questa azione non può essere annullata!`,
@@ -572,8 +511,7 @@ export default {
               buttonsStyling: false
             });
           }
-          const idx = this.pdfmodal.data.findIndex( f => f.id == file.id )
-          this.pdfmodal.data.splice(idx,1)
+          this.refreschFileData()
         }
       })
       .catch( (error) => {
@@ -585,7 +523,7 @@ export default {
       })
     },
     handleFileChange(files){
-      this.pdfmodal.newFile = files[0]
+      this.modal.data.file = files[0]
     }
   }
 };

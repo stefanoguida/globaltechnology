@@ -70,7 +70,7 @@
         type: String,
         description: 'Modal size',
         validator(value) {
-          let acceptedValues = ["", "sm", "lg"];
+          let acceptedValues = ["", "sm", "lg", "xl"];
           return acceptedValues.indexOf(value) !== -1;
         },
       },

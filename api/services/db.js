@@ -12,7 +12,18 @@ class Db {
     }
 
     initDb() {
-      this.connection = mysql.createConnection(config.db)
+      this.connection = mysql.createPool(config.db)
+      this.connection.on('connection', function(connection) {
+        setInterval( () => {
+          try {
+            console.log("ping db")
+            connection.ping()
+          }
+          catch ( error ) {
+            console.log("ping error", error)
+          }
+        }, 60000); // ping to DB every minute
+      })
       this.connection.on('error', function(err) {
         if(err.code === 'PROTOCOL_CONNECTION_LOST'){
           this.initDb()

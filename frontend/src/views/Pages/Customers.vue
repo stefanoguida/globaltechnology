@@ -55,7 +55,7 @@
                     <i class="text-white ni ni-ruler-pencil"></i>
                   </base-button>
                   <base-button @click.native="handleDelete($index, row)" class="remove btn-link" type="danger" size="sm" icon>
-                    <i class="text-white ni ni-fat-remove"></i>
+                    <i class="text-white fa fa-trash"></i>
                   </base-button>
                 </div>
               </el-table-column>

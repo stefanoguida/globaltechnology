@@ -7,7 +7,7 @@
         <sidebar-item :link="{ name: 'Clienti', path: '/customers', icon: 'fa fa-users text-primary' }" ></sidebar-item>
         <sidebar-item :link="{ name: 'Progetti', path: '/projects', icon: 'ni ni-building text-primary' }" ></sidebar-item>
         <sidebar-item :link="{ name: 'Offerte', path: '/offers', icon: 'ni ni-single-copy-04 text-primary' }" ></sidebar-item>
-        <sidebar-item :link="{ name: 'Contratti', path: '/contracts', icon: 'ni ni-single-copy-04 text-primary' }" ></sidebar-item>
+        <sidebar-item :link="{ name: 'Contratti', path: '/contracts', icon: 'fa fa-file-contract text-primary' }" ></sidebar-item>
         <sidebar-item :link="{ name: 'Orders', path: '/orders', icon: 'ni ni-cart text-primary' }" ></sidebar-item>
         <sidebar-item :link="{ name: 'Servizi', path: '/services', icon: 'ni ni-books text-primary' }" ></sidebar-item>
 

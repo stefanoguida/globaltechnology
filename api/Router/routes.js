@@ -27,7 +27,7 @@ const upload = multer({storage: storage})
 
 router.get('/getRunnigOffers', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Contratto')
+        const Model = factory.getInstanceOf('Offerta')
         const data = await Model.getRunningOffers()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 

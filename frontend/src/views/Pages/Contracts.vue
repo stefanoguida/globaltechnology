@@ -30,7 +30,7 @@
             </div>
             <div class="text-right">
               <base-button type="primary" class="my-4" @click="modal.show = false">Annulla</base-button>
-              <base-button type="primary" class="my-4" @click="handleSaveCustomer">Salva</base-button>
+              <base-button type="primary" class="my-4" @click="handleSave">Salva</base-button>
             </div>
           </form>
         </template>
@@ -64,7 +64,7 @@
                     <i class="text-white ni ni-ruler-pencil"></i>
                   </base-button>
                   <base-button @click.native="handleDelete($index, row)" class="remove btn-link" type="danger" size="sm" icon>
-                    <i class="text-white ni ni-fat-remove"></i>
+                    <i class="text-white fa fa-trash"></i>
                   </base-button>
                 </div>
               </el-table-column>
@@ -116,7 +116,7 @@ export default {
       model: 'contratto',
       title: 'Contratti',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto'],
       tableColumns: [],
       tableData: [],
       selectedRows: [],
@@ -125,12 +125,14 @@ export default {
       },
       modal: {
         fields:[],
-        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by'],
+        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by', 'id_progetto','cliente'],
         show: false,
         type: '', //insert|update
         title: '',
         data: {}
-      }
+      },
+      projectSelectOptions: [],
+      statusOfferSelectOptions: []
     };
   },
   created() {
@@ -144,27 +146,25 @@ export default {
     async fetchData( ) {
       
       await this.$store.dispatch(__.GETALL,this.model)
-      await this.$store.dispatch(__.GETALL,'stato_contratto')
       await this.$store.dispatch(__.GETALL,'progetto')
-      await this.$store.dispatch(__.GETALL,'stato_progetto')
+      this.projectSelectOptions = this.$store.getters.projectSelectOptions
 
       this.modal.fields = this.$store.state.contracts.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
-          case 'data_offerta':
           case 'data_accettazione':
             return {
               type: 'date',
               prop: f, 
               label: f.replace(/^\w/, c => c.toUpperCase())
             }
-          case 'stato':
+          case 'progetto':
             return {
               type: 'select',
-              prop: f, 
+              prop: 'id_progetto', 
               label: f.replace(/^\w/, c => c.toUpperCase()),
-              options: this.$store.getters.statusContractsSelectOptions
+              options: this.projectSelectOptions
             }
           default: 
             return {
@@ -179,7 +179,6 @@ export default {
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
-          case 'data_offerta':
           case 'data_accettazione':
             return {
               formatter: (row, column) => moment(row[column.property]).format('YYYY-MM-DD'),
@@ -187,8 +186,7 @@ export default {
               sortable: true,
               label: f.replace(/^\w/, c => c.toUpperCase())
             }
-          case 'importo_richiesto':
-          case 'importo_accettato':
+          case 'importo':
             return {
               formatter: (row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property]),
               prop: f, 
@@ -206,27 +204,6 @@ export default {
         })
       
       this.tableData = this.$store.state.contracts.records
-      .filter( r => r.stato == 2 )
-      .map( record => 
-        Object.keys(record)
-        .filter((key) => !this.hiddenColumns.includes(key))
-        .reduce((cur, key) => {
-          let val
-          switch(key) {
-            case 'progetto':
-              val =  (this.$store.state.projects.records.filter( i => i.id == record[key] ).pop() || {}).impianto
-              break
-            case 'stato':
-              val =  (this.$store.state.projectStatus.records.filter( i => i.id == record[key] ).pop() || {}).name
-              break
-            default:
-              val = record[key]
-              break
-          }
-
-          return Object.assign(cur, {[key]: val})
-        }, {})
-      )
     },
     openCreateModal(){
       this.modal.type = 'insert'
@@ -238,10 +215,12 @@ export default {
       this.modal.type = 'update'
       this.modal.data = Object.entries(row).reduce( (a,c) => {
         switch(c[0]){
-          case "data_offerta":
           case "data_accettazione":
             a[c[0]] =  moment(c[1]).format('YYYY-MM-DD')
             break
+          case "progetto":
+            a[c[0]] = (this.projectSelectOptions.filter( r => r.text == c[1]).pop()).value
+            break;
           default:
             a[c[0]] = c[1]
             break;
@@ -252,11 +231,12 @@ export default {
       this.modal.show = true
       this.modal.title = 'Modifica contratto'
     },
-    async handleSaveCustomer () {
+    async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
+      const {id, trec, created_at, created_by, updated_at, updated_by, progetto, ...payload } = this.modal.data
       const data = {
         model: this.model, 
-        payload: this.modal.data, 
+        payload: payload, 
         cond: this.modal.condition || []
       }
       const response = await this.$store.dispatch(method, data)

@@ -25,7 +25,7 @@ router.beforeEach( async (to,from,next) => {
   const authRequired = !publicPages.includes(to.path);
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const token = user.token || false
-  const verification = !token ? {message: 'login'} : (await axios.get('http://localhost/auth/verify-token',{headers: {'authorization': `Bearer ${token}`}})).data
+  const verification = !token ? {message: 'login'} : (await axios.get(process.env.VUE_APP_API_HOST + 'auth/verify-token',{headers: {'authorization': `Bearer ${token}`}})).data
   const expired = verification.expiredAt || false
   const tokenVerified = verification.message === 'verified'
   // trying to access a restricted page + not logged in

@@ -33,7 +33,7 @@
             </div>
             <div class="text-right">
               <base-button type="primary" class="my-4" @click="modal.show = false">Annulla</base-button>
-              <base-button type="primary" class="my-4" @click="handleSaveCustomer">Salva</base-button>
+              <base-button type="primary" class="my-4" @click="handleSave">Salva</base-button>
             </div>
           </form>
         </template>
@@ -74,7 +74,7 @@
                     <i class="text-white ni ni-ruler-pencil"></i>
                   </base-button>
                   <base-button @click.native="handleDelete($index, row)" class="remove btn-link" type="danger" size="sm" icon>
-                    <i class="text-white ni ni-fat-remove"></i>
+                    <i class="text-white fa fa-trash"></i>
                   </base-button>
                 </div>
               </el-table-column>
@@ -128,7 +128,7 @@ export default {
       model: 'progetto',
       title: 'Progetti',
       searchColumns: ['cliente','impianto','luogo'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_stato','id_cliente'],
       tableColumns: [],
       tableData: [],
       selectedRows: [],
@@ -143,12 +143,14 @@ export default {
       },
       modal: {
         fields:[],
-        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by'],
+        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_stato','id_cliente'],
         show: false,
         type: '', //insert|update
         title: '',
         data: {}
-      }
+      },
+      customerSelectOptions: [],
+      statusSelectOptions: []
     };
   },
   created() {
@@ -163,8 +165,11 @@ export default {
       
       await this.$store.dispatch(__.GETALL,this.model)
       await this.$store.dispatch(__.GETALL,'cliente')
-      await this.$store.dispatch(__.GETALL,'stato_progetto')
-      
+      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'progetto'}]})
+
+      this.customerSelectOptions = this.$store.getters.customerSelectOptions
+      this.statusSelectOptions  = this.$store.getters.statusSelectOptions
+
       this.modal.fields = this.$store.state.projects.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => {
@@ -172,16 +177,16 @@ export default {
           case 'cliente':
             return {
               type: 'select',
-              prop: f, 
+              prop: 'id_cliente', 
               label: f.replace(/^\w/, c => c.toUpperCase()),
-              options: this.$store.getters.customerSelectOptions
+              options: this.customerSelectOptions
             }
           case 'stato':
             return {
               type: 'select',
-              prop: f, 
+              prop: 'id_stato', 
               label: f.replace(/^\w/, c => c.toUpperCase()),
-              options: this.$store.getters.statusProjectSelectOptions
+              options: this.statusSelectOptions
             }
           case 'data_inizio':
           case 'data_fine':
@@ -233,15 +238,7 @@ export default {
           }
         })
       
-      // this.tableColumns.unshift({type: 'selection'}) // Aggiunta in testa della colonna per la selezione multipla delle righe
-
-      this.tableData = this.$store.state.projects.records.map( record => 
-        Object.keys(record)
-        .filter((key) => !this.hiddenColumns.includes(key))
-        .reduce((cur, key) => {
-          return Object.assign(cur, { [key]: key == 'cliente' ? (this.$store.state.customers.records.filter( i => i.id == record[key] ).pop() || {}).ragione_sociale : record[key] })
-        }, {})
-      )
+      this.tableData = this.$store.state.projects.records
     },
     openCreateModal(){
       this.modal.type = 'insert'
@@ -258,10 +255,10 @@ export default {
             a[c[0]] =  moment(c[1]).format('YYYY-MM-DD')
             break
           case "cliente":
-            a[c[0]] = (this.$store.state.customers.records.filter( r => r.ragione_sociale == c[1]).pop()).id
+            a[c[0]] = (this.customerSelectOptions.filter( r => r.text == c[1]).pop()).value
             break;
           case "stato":
-            a[c[0]] = (this.$store.state.projectStatus.records.filter( r => r.name.toLowerCase() == c[1]).pop()).code
+          a[c[0]] = (this.statusSelectOptions.filter( r => r.text == c[1]).pop()).value
             break;
           default:
             a[c[0]] = c[1]
@@ -273,11 +270,12 @@ export default {
       this.modal.show = true
       this.modal.title = 'Modifica progetto'
     },
-    async handleSaveCustomer () {
+    async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
+      const {id, trec, created_at, created_by, updated_at, updated_by, cliente, stato, ...payload } = this.modal.data
       const data = {
         model: this.model, 
-        payload: this.modal.data, 
+        payload: payload, 
         cond: this.modal.condition || []
       }
 

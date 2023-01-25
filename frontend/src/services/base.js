@@ -4,7 +4,7 @@ export default class BaseService {
   constructor() {
     
     this.axios = axios
-    this.SERVICE_URL = 'http://localhost/'
+    this.SERVICE_URL = process.env.VUE_APP_API_HOST || 'http://localhost'
     this.headers = {}
   }
 
@@ -164,13 +164,11 @@ export default class BaseService {
     }
   }
 
-  async upload (type, id, file) {
+  async upload (data) {
     try {
       this.setHeaders()  
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-      formData.append('id', id);
+      Object.entries(data).forEach( d => formData.append(d[0], d[1]) )
       this.headers['Content-Type'] = 'multipart/form-data'
       const response = await this.axios.post(`${this.SERVICE_URL}uploadFile`, formData, {headers: this.headers})
       return response.data

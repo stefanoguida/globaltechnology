@@ -9,7 +9,6 @@ class Model {
             const {condition, values} = this.dbService.evaluateConditions(cond)
             const stmt = `select * from ${this.table} where ${condition}` 
             const result = await this.dbService.query(stmt, values)
-            console.log(stmt, result)
             return result.length ? result.pop() : {}
         }
         catch( e ) {
@@ -22,6 +21,7 @@ class Model {
         try {
             const {condition, values} = this.dbService.evaluateConditions(cond)
             const stmt = `select * from ${this.table} where ${condition}`
+            console.log(stmt)
             const result = await this.dbService.query(stmt, values)
             return result.length ? result : []
         }
@@ -37,8 +37,8 @@ class Model {
             if ( !Object.keys(data).length ) throw new Error("Missing data!")
             
             const stmt = `insert into ${this.table} (${Object.keys(data).join(',')}) values (${Object.values(data).map( v => '?').join(',')})`
-            await this.dbService.query(stmt, Object.values(data))
-            return {error: false, code: null, message: "Insert succede"}
+            const result = await this.dbService.query(stmt, Object.values(data))
+            return {error: false, code: null, message: "Insert succede", data: result}
         }
         catch ( error ) {
             console.log(error)
