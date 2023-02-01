@@ -13,9 +13,11 @@ class Contratto extends Model {
         c.ragione_sociale as cliente,
         o.id_progetto,
         p.impianto as progetto,
+        p.luogo,
+        p.impianto,
+        o.kw,
         o.data_accettazione,
-        o.importo,
-        o.kw
+        o.importo_contrattato
         FROM contratti o 
         JOIN progetti p ON o.id_progetto = p.id
         JOIN clienti c ON p.id_cliente = c.id
@@ -47,7 +49,7 @@ class Contratto extends Model {
     }
     async getTotalInvoiced () {
         try {
-            const stmt = `select IFNULL(sum(importo),0) as total_invoiced from ${this.table}`
+            const stmt = `select IFNULL(sum(importo_contrattato),0) as total_invoiced from ${this.table}`
             return (await this.dbService.query(stmt))[0] || 0
         }
         catch ( err ) {

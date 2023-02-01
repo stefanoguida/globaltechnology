@@ -24,7 +24,7 @@
     "date-fns": "^2.14.0",
     "dotenv": "^16.0.3",
     "dropzone": "5.7.1",
-    "element-ui": "2.13.2",
+    "element-ui": "^2.2.0",
     "es6-promise": "^4.2.8",
     "eslint": "^7.1.0",
     "eslint-plugin-vue": "^6.2.2",

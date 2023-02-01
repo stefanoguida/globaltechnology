@@ -8,14 +8,8 @@ class File extends Model {
 
     async saveFile ( file, data ) {
         try {
-            const stmt = `
-                INSERT INTO ${this.table} (id_cliente,id_progetto,id_riferimento,tipo,path) 
-                SELECT progetti.id_cliente, progetti.id, ?, ?, ?
-                FROM ordini JOIN progetti ON ordini.id_progetto = progetti.id 
-                WHERE ordini.id = ?
-                ON DUPLICATE KEY UPDATE path = VALUES(path)
-            ` 
-            await this.dbService.query(stmt, [data.id_riferimento, data.type, file.path.replace('/app/',''), data.id])
+            const stmt = ` INSERT INTO ${this.table} (id_riferimento,tipo,path) values ( ?, ?, ? ) ` 
+            await this.dbService.query(stmt, [data.id_riferimento, data.type, file.path.replace('/app/','')])
 
         }
         catch ( error ) {

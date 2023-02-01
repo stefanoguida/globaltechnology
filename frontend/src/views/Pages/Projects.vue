@@ -1,12 +1,14 @@
 <template>
   <div class="content">
-    <base-header class="pb-6">
-      <div class="row align-items-center py-4">
-        <div class="col-lg-12 col-5 text-right">
-          <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button>
+    <dashboard-header>
+      <template slot="footer">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-12 col-5 text-right">
+            <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button>
+          </div>
         </div>
-      </div>
-    </base-header>
+      </template>
+    </dashboard-header>
 
     <!-- Create modal-->
     <modal :show.sync="modal.show" size="lg" body-classes="p-0">
@@ -28,7 +30,8 @@
                 <textarea v-model="modal.data[field.prop]" class="form-control" rows="3"></textarea>
               </base-input>
               <base-input v-else-if="field.type == 'slider'" :label="field.label" alternative class="mb-3" >
-                <base-slider v-model="modal.data[field.prop]" :options="slider.options"></base-slider>
+                <base-slider v-model="modal.data[field.prop]" :options="field.options || slider.options"></base-slider>
+                <label class="text-xs">Milestone: {{field.milestones}}</label>
               </base-input>
             </div>
             <div class="text-right">
@@ -39,6 +42,16 @@
         </template>
       </card>
     </modal>
+
+    <milestone-modal 
+      :show="milestoneModal.show" 
+      :editable="milestoneModal.editable"
+      :tableColumns="milestoneModal.tableColumns" 
+      :tableData="milestoneModal.tableData" 
+      :id_contratto="milestoneModal.id_reference"
+      :total="milestoneModal.total"
+      @after-save="handleSaveMilestone">
+    </milestone-modal>
 
     <div class="container-fluid mt--6">
       <div>
@@ -70,6 +83,9 @@
               <!-- Action Column -->
               <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
+                  <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
+                    <i class="ni ni-atom"></i>
+                  </base-button>
                   <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                     <i class="text-white ni ni-ruler-pencil"></i>
                   </base-button>
@@ -107,12 +123,17 @@ import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
 import moment from 'moment'
+import DashboardHeader from '../Dashboard/DashboardHeader.vue';
 
 import * as __ from '../../store/constants'
+import lodash from 'lodash'
+import MilestoneModal from '../Components/MilestoneModal.vue';
 
 export default {
   mixins: [searchTableMixin],
   components: {
+    MilestoneModal,
+    DashboardHeader,
     Modal,
     BasePagination,
     BaseProgress,
@@ -143,11 +164,19 @@ export default {
       },
       modal: {
         fields:[],
-        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_stato','id_cliente'],
+        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_stato','id_cliente','completamento'],
         show: false,
         type: '', //insert|update
         title: '',
         data: {}
+      },
+      milestoneModal: {
+        show: false,
+        editable: true,
+        tableColumns:[],
+        tableData:[],
+        id_reference: -1,
+        total: 0
       },
       customerSelectOptions: [],
       statusSelectOptions: []
@@ -166,6 +195,8 @@ export default {
       await this.$store.dispatch(__.GETALL,this.model)
       await this.$store.dispatch(__.GETALL,'cliente')
       await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'progetto'}]})
+      await this.$store.dispatch(__.GETALL,'contratto')
+      await this.$store.dispatch(__.GETALL,'milestone')
 
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
       this.statusSelectOptions  = this.$store.getters.statusSelectOptions
@@ -199,7 +230,7 @@ export default {
             return {
               type: 'slider',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace(/^\w/, c => c.toUpperCase()),
             }
           case 'commenti':
             return {
@@ -247,6 +278,7 @@ export default {
       this.modal.title = 'Crea nuovo progetto'
     },
     openUpdateModal(index, row){
+      console.log('openUpdateModal', row)
       this.modal.type = 'update'
       this.modal.data = Object.entries(row).reduce( (a,c) => {
         switch(c[0]){
@@ -270,6 +302,101 @@ export default {
       this.modal.show = true
       this.modal.title = 'Modifica progetto'
     },
+
+    async openMilestoneModal( row ) {
+      const contratto = this.$store.state.contracts.records.filter( c => c.id_progetto == row.id).pop()
+
+      const payload = {
+        model: 'milestone', 
+        cond: [{field:"id_contratto", op:"=", value:contratto.id}]
+      } 
+      await this.$store.dispatch(__.GETWHERE, payload)
+      if (lodash.isEmpty(this.$store.state.milestone)) {
+        this.$notify({type:'danger', message:'Nessuna milestone truvata'})
+        return false
+      }
+
+      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
+
+      this.milestoneModal.tableColumns = this.$store.state.milestone.fields
+      .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
+      .map( f => {
+        switch(f){
+          case 'id':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'input',
+              minWidth: 50,
+              disabled:true
+            }
+          case 'descrizione':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'textarea'
+            }
+          case 'Note':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'textarea'
+            }
+          case 'stato': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: 'id_stato', 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'select',
+              options: this.$store.getters.statusSelectOptions
+            }
+          case 'importo_percentuale': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'number'
+            }
+          case 'importo_valore': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'number',
+              disabled:true
+            }
+          default: 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'input',
+              editable: true
+            }
+        }
+      })
+      
+      this.milestoneModal.tableData = this.$store.state.milestone.records
+      this.milestoneModal.id_reference = contratto.id
+      this.milestoneModal.total = parseFloat(contratto.importo_contrattato)
+      this.milestoneModal.show = true
+    },
+
+    async handleSaveMilestone ( id ) {
+      const payload = {
+        model: 'milestone', 
+        cond: [{field:"id_contratto", op:"=", value:id}]
+      }
+      await this.$store.dispatch(__.GETWHERE, payload)
+      this.milestoneModal.tableData = this.$store.state.milestone.records
+      this.milestoneModal.show = false
+      this.$notify({type:'success', message: `Milestones salvate correttamente`})
+      await this.fetchData()
+    },
+
     async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
       const {id, trec, created_at, created_by, updated_at, updated_by, cliente, stato, ...payload } = this.modal.data

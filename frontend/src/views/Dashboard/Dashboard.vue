@@ -1,7 +1,6 @@
 <template>
   <div>
-    <base-header class="pb-6">
-      <!-- Card stats -->
+    <!-- <base-header class="pb-6">
       <div class="row">
         <div class="col-xl-12">
           <div class="row">
@@ -24,7 +23,8 @@
           </div>
         </div>
       </div>
-    </base-header>
+    </base-header> -->
+    <dashboard-header></dashboard-header>
 
     <!--Charts-->
     <div class="container-fluid mt--6">
@@ -63,6 +63,7 @@
   import Offers from './Offers.vue'
   import FlatData from './FlatData.vue'
 
+  import DashboardHeader from './DashboardHeader.vue';
   import * as __ from '../../store/constants'
 
   export default {
@@ -81,7 +82,8 @@
       ProgressTrackList,
       ProjectProgress,
       Offers,
-      FlatData
+      FlatData,
+      DashboardHeader
     },
     data() {
       return {};

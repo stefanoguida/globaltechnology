@@ -1,12 +1,15 @@
 <template>
   <div class="content">
-    <base-header class="pb-6">
-      <div class="row align-items-center py-4">
-        <div class="col-lg-12 col-5 text-right">
-          <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button>
+    <dashboard-header>
+      <template slot="footer">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-12 col-5 text-right">
+            <base-button size="xl" type="primary" @click="handleShowPDF" :disabled="!Object.keys(selectedRow).length">Mostra PDF ordine {{ selectedRow.id_ordine }}</base-button>
+            <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button>
+          </div>
         </div>
-      </div>
-    </base-header>
+      </template>
+    </dashboard-header>
 
     <!-- Create modal-->
     <modal :show.sync="modal.show" size="lg" body-classes="p-0">
@@ -64,7 +67,7 @@
                   <pdf :src="file.path" :page=1></pdf>
                 </template>
                 <div>
-                  Questo è il body
+                  {{ file.path.split('/').slice(-1).pop() }}
                   <div class="d-flex">
                     <base-button type="primary" size="sm" icon>
                       <a :href="file.path" target="_blank"><i class="text-white fa fa-eye"></i></a>
@@ -104,6 +107,11 @@
 
                 <div>
                   <el-form :inline="true" :model="filters">
+
+                    <el-form-item>
+                      <el-input placeholder="Ordine" v-model="filters.id_ordine"></el-input>
+                    </el-form-item>
+
                     <el-form-item>
                       <el-select placeholder="Cliente" v-model="filters.cliente" filterable>
                         <el-option value=""></el-option>
@@ -148,9 +156,9 @@
                 <!-- Action Column -->
                 <el-table-column align="right" label="Actions" min-width="100px">
                   <div slot-scope="{$index, row}" class="d-flex">
-                    <base-button @click.native="handleShowPDF(row)" type="primary" size="sm" icon >
+                    <!-- <base-button @click.native="handleShowPDF(row)" type="primary" size="sm" icon >
                       <i class="text-white fa fa-file-pdf"></i>
-                    </base-button>
+                    </base-button> -->
                     <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                       <i class="text-white ni ni-ruler-pencil"></i>
                     </base-button>
@@ -189,12 +197,14 @@ import { Modal } from '@/components';
 import pdf from 'vue-pdf'
 import moment from 'moment'
 import lodash from 'lodash'
+import DashboardHeader from '../Dashboard/DashboardHeader.vue';
 
 import * as __ from '../../store/constants'
 
 export default {
   mixins: [searchTableMixin],
   components: {
+    DashboardHeader,
     pdf,
     Modal,
     BasePagination,
@@ -216,7 +226,7 @@ export default {
       model: 'riga_ordine',
       title: 'Ordini',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_ordine','id_progetto','id_stato','id_servizio'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','id_servizio'],
       tableColumns: [],
       tableData: [],
       tableDataCSSClassBase: 'container-fluid mt--6 col-12',
@@ -225,7 +235,8 @@ export default {
         cliente: '',
         id_progetto: '',
         id_stato: '',
-        id_servizio: ''
+        id_servizio: '',
+        id_ordine: ''
       },
       fileData: [],
       detailsData:[],
@@ -380,20 +391,13 @@ export default {
         })
       
       this.tableData = this.$store.state.orderRows.records
-
-      // this.$store.state.file.records.map( file => {
-      //   const progetto = (this.$store.state.projects.records.filter( i => i.id == file.progetto ).pop() || {}).impianto
-      //   const idx = this.tableData.findIndex( i => i.progetto == progetto)
-      //   if( idx >= 0 ) {
-      //     if (!_.isArray(this.tableData[idx].files)) this.tableData[idx].files = []
-      //     this.tableData[idx].files.push(file)
-      //   }
-      // })
+      this.selectedRow = this.$store.state.orderRows.records[0] 
     },
     handleRowSelect( row ){
       this.selectedRow = row
     },
-    async handleShowPDF( row ) {
+    async handleShowPDF(  ) {
+      const row = this.selectedRow
       await this.$store.dispatch(__.GETWHERE, {model: 'file', cond: [{field:"id_progetto", op:"=", value:row.id_progetto},{field:"tipo", op:"=", value:"ordine"}]})
       this.pdfmodal.data = this.$store.state.file.records
       this.pdfmodal.show = true

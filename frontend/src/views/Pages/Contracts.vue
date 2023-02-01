@@ -1,12 +1,14 @@
 <template>
   <div class="content">
-    <base-header class="pb-6">
-      <div class="row align-items-center py-4">
-        <div class="col-lg-12 col-5 text-right">
-          <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button>
+    <dashboard-header>
+      <template slot="footer">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-12 col-5 text-right">
+            <!-- <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button> -->
+          </div>
         </div>
-      </div>
-    </base-header>
+      </template>
+    </dashboard-header>
 
     <!-- Create modal-->
     <modal :show.sync="modal.show" size="lg" body-classes="p-0">
@@ -37,6 +39,18 @@
       </card>
     </modal>
 
+    <pdf-modal :show="pdfmodal.show" :data="pdfmodal.data" :id_reference="pdfmodal.id_reference" @after-save="handleSavedFile"></pdf-modal>
+
+    <milestone-modal 
+      :show="milestoneModal.show" 
+      :editable="milestoneModal.editable"
+      :tableColumns="milestoneModal.tableColumns" 
+      :tableData="milestoneModal.tableData" 
+      :id_contratto="milestoneModal.id_reference"
+      :total="milestoneModal.total"
+      @after-save="handleSaveMilestone">
+    </milestone-modal>
+
     <div class="container-fluid mt--6">
       <div>
         <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
@@ -60,11 +74,9 @@
               <!-- Action Column -->
               <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
-                  <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
-                    <i class="text-white ni ni-ruler-pencil"></i>
-                  </base-button>
-                  <base-button @click.native="handleDelete($index, row)" class="remove btn-link" type="danger" size="sm" icon>
-                    <i class="text-white fa fa-trash"></i>
+                  <base-button @click.native="handleShowPDF(row)"  class="edit" type="primary" size="sm" icon>PDF</base-button>
+                  <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
+                    <i class="ni ni-atom"></i>
                   </base-button>
                 </div>
               </el-table-column>
@@ -97,12 +109,20 @@ import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
 import moment from 'moment'
+import DashboardHeader from '../Dashboard/DashboardHeader.vue';
+
+import PdfModal from '../Components/PdfModal.vue';
+import MilestoneModal from '../Components/MilestoneModal.vue';
 
 import * as __ from '../../store/constants'
+import lodash from 'lodash'
 
 export default {
   mixins: [searchTableMixin],
   components: {
+    PdfModal,
+    MilestoneModal,
+    DashboardHeader,
     Modal,
     BasePagination,
     RouteBreadCrumb,
@@ -116,9 +136,10 @@ export default {
       model: 'contratto',
       title: 'Contratti',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_cliente'],
       tableColumns: [],
       tableData: [],
+      selectedRow: {},
       selectedRows: [],
       pagination:{
         perPage:25
@@ -130,6 +151,21 @@ export default {
         type: '', //insert|update
         title: '',
         data: {}
+      },
+      pdfmodal: {
+        show: false,
+        title: 'Gestisci file',
+        data: [],
+        id_reference: -1,
+        newFile: {}
+      },
+      milestoneModal: {
+        show: false,
+        editable: true,
+        tableColumns:[],
+        tableData:[],
+        id_reference: -1,
+        total: 0
       },
       projectSelectOptions: [],
       statusOfferSelectOptions: []
@@ -147,7 +183,10 @@ export default {
       
       await this.$store.dispatch(__.GETALL,this.model)
       await this.$store.dispatch(__.GETALL,'progetto')
+      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]}),
+
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
+      this.statusOfferSelectOptions = this.$store.getters.statusSelectOptions
 
       this.modal.fields = this.$store.state.contracts.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
@@ -205,12 +244,88 @@ export default {
       
       this.tableData = this.$store.state.contracts.records
     },
+
+    async openMilestoneModal( row ) {
+
+      const payload = {
+        model: 'milestone', 
+        cond: [{field:"id_contratto", op:"=", value:row.id}]
+      } 
+      await this.$store.dispatch(__.GETWHERE, payload)
+
+      this.milestoneModal.tableColumns = this.$store.state.milestone.fields
+      .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
+      .map( f => {
+        switch(f){
+          case 'id':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'input',
+              minWidth: 50,
+              disabled:true
+            }
+          case 'descrizione':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'textarea'
+            }
+          case 'Note':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'textarea'
+            }
+          case 'stato': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: 'id_stato', 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'select',
+              options: this.statusOfferSelectOptions
+            }
+          case 'importo_percentuale': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'number'
+            }
+          case 'importo_valore': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'number',
+              disabled:true
+            }
+          default: 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              type: 'input',
+              editable: true
+            }
+        }
+      })
+      this.milestoneModal.tableData = this.$store.state.milestone.records
+      this.milestoneModal.id_reference = row.id
+      this.milestoneModal.total = parseFloat(row.importo_contrattato)
+      this.milestoneModal.show = true
+    },
+
     openCreateModal(){
       this.modal.type = 'insert'
       this.modal.data = {}
       this.modal.show = true
       this.modal.title = 'Crea nuovo contratto'
     },
+
     openUpdateModal(index, row){
       this.modal.type = 'update'
       this.modal.data = Object.entries(row).reduce( (a,c) => {
@@ -231,6 +346,7 @@ export default {
       this.modal.show = true
       this.modal.title = 'Modifica contratto'
     },
+
     async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
       const {id, trec, created_at, created_by, updated_at, updated_by, progetto, ...payload } = this.modal.data
@@ -250,6 +366,7 @@ export default {
         this.modal.show = false
       }
     },
+
     handleDelete(index, row) {
       swal.fire({
         title: 'Sicuro?',
@@ -282,6 +399,7 @@ export default {
           });
       })
     },
+
     async deleteRow(row) {
       await this.$store.dispatch(__.DELETE,{model:this.model, id:row.id})
       let indexToDelete = this.tableData.findIndex(
@@ -291,8 +409,46 @@ export default {
         this.tableData.splice(indexToDelete, 1);
       }
     },
+
     selectionChange(selectedRows) {
       this.selectedRows = selectedRows
+    },
+
+    async handleShowPDF( row ) {
+      const payload = {
+        model: 'file', 
+        cond: [
+          {field:"id_riferimento", op:"=", value:row.id},
+          {field:"tipo", op:"=", value:"contratto"}
+        ]
+      } 
+      await this.$store.dispatch(__.GETWHERE, payload)
+      this.pdfmodal.data = this.$store.state.file.records
+      this.pdfmodal.id_reference = row.id
+      this.pdfmodal.show = true
+    },
+
+    async handleSavedFile ( id ) {
+      const payload = {
+        model: 'file', 
+        cond: [
+          {field:"id_riferimento", op:"=", value:id},
+          {field:"tipo", op:"=", value:"contratto"}
+        ]
+      }
+      await this.$store.dispatch(__.GETWHERE, payload)
+      this.pdfmodal.data = this.$store.state.file.records
+    },
+
+    async handleSaveMilestone ( id ) {
+      const payload = {
+        model: 'milestone', 
+        cond: [{field:"id_contratto", op:"=", value:id}]
+      }
+      await this.$store.dispatch(__.GETWHERE, payload)
+      this.milestoneModal.tableData = this.$store.state.milestone.records
+      this.milestoneModal.show = false
+      this.$notify({type:'success', message: `Milestones salvate correttamente`})
     }
   }
 };

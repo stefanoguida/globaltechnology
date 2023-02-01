@@ -1,18 +1,14 @@
 <template>
   <div class="content">
-    <base-header class="pb-6">
-      <div class="row align-items-center py-4">
-        <div class="col-lg-6 col-7">
-          <!-- <h6 class="h2 text-white d-inline-block mb-0">Paginated tables</h6> -->
-          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
-            <route-bread-crumb></route-bread-crumb>
-          </nav>
+    <dashboard-header>
+      <template slot="footer">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-12 col-5 text-right">
+            <base-button size="xl" type="neutral" @click="openCreateModal">New</base-button>
+          </div>
         </div>
-        <div class="col-lg-6 col-5 text-right">
-          <base-button size="xl" type="neutral" @click="openCreateModal">New</base-button>
-        </div>
-      </div>
-    </base-header>
+      </template>
+    </dashboard-header>
 
     <!-- Create modal-->
     <modal :show.sync="modal.show" size="lg" body-classes="p-0">
@@ -88,12 +84,14 @@ import { BasePagination } from '@/components';
 import clientPaginationMixin from '../Tables/PaginatedTables/clientPaginationMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
+import DashboardHeader from '../Dashboard/DashboardHeader.vue';
 
 import * as __ from '../../store/constants'
 
 export default {
   mixins: [clientPaginationMixin],
   components: {
+    DashboardHeader,
     Modal,
     BasePagination,
     RouteBreadCrumb,

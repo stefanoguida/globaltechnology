@@ -16,7 +16,9 @@ const modelMapping = {
     servizio: "services",
     ordine: "orders",
     riga_ordine: "orderRows",
+    riga_offerta: "offerRows",
     pagamento_ordine: "orderPayments",
+    tipo_progetto: "projectTypes",
     stato: "status",
 }
 
@@ -70,8 +72,8 @@ const getters = {
     servicesSelectOptions(state){
         return state.services.records.map( r => ({text: r.name, value: r.id}) )
     },
-    projectSelectOptions(state){
-        return state.projects.records.map( r => ({text: r.impianto, value: r.id}) )
+    projectTypeSelectOptions(state){
+        return state.projectTypes.records.map( r => ({text: r.name, value: r.id}) )
     },
     services(state){
         return state.services.records
@@ -294,9 +296,12 @@ const mutations = {
         state[modelMapping[data.model] || data.model ].records = data.data
     },
     [__.GETWHERE](state, data) {
-        state[modelMapping[data.model] || data.model ] = {}
-        state[modelMapping[data.model] || data.model ].fields = Object.keys(data.data[0])
-        state[modelMapping[data.model] || data.model ].records = data.data
+        // state[modelMapping[data.model] || data.model ] = {}
+        // state[modelMapping[data.model] || data.model ].fields = Object.keys(data.data[0])
+        // state[modelMapping[data.model] || data.model ].records = data.data
+        Vue.set(state,[modelMapping[data.model] || data.model ], {})
+        Vue.set(state[modelMapping[data.model] || data.model ],'fields',Object.keys(data.data[0]))
+        Vue.set(state[modelMapping[data.model] || data.model ],'records',data.data)
     },
     [__.GET](state, data) {
         state[modelMapping[data.model] || data.model ] = {}

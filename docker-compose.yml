@@ -13,6 +13,7 @@ services:
       - "8080:8080"
     depends_on:
       - api
+    restart: always
   
   frontend-dev:
     build: 
@@ -24,7 +25,7 @@ services:
       - API_HOST=$API_HOST
     volumes:
       - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
+      - /app/node_modules
       - shared_storage:/app/public/storage
     ports:
       - "8081:8080"
@@ -50,6 +51,7 @@ services:
       - DB_PORT=3307
     depends_on:
       - database
+    restart: always
           
   phpmyadmin:
     image: phpmyadmin
@@ -73,8 +75,25 @@ services:
     ports:
       - 3307:3306
     volumes:
-      - ./database/global_technology.sql:/docker-entrypoint-initdb.d/global_technology.sql
+      - ./database/backup/global_technology.sql:/docker-entrypoint-initdb.d/global_technology.sql
       - db_data:/var/lib/mysql
+    restart: always
+
+  database-backup:
+    build: ./database
+    container_name: global_technology_database_backup
+    environment:
+      MYSQL_CONTAINER_NAME: database
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./database/backup:/opt/mysql/backup
+    depends_on:
+      - database
+    command: crond -f -d 8
+    restart: always
+
 
 volumes:
   db_data:

@@ -36,7 +36,7 @@ class Model {
             if ( !this.helper.dependencies.lodash.isObject(data) ) throw new Error("Data seems not to be an Object")
             if ( !Object.keys(data).length ) throw new Error("Missing data!")
             
-            const stmt = `insert into ${this.table} (${Object.keys(data).join(',')}) values (${Object.values(data).map( v => '?').join(',')})`
+            const stmt = `insert ignore into ${this.table} (${Object.keys(data).join(',')}) values (${Object.values(data).map( v => '?').join(',')})`
             const result = await this.dbService.query(stmt, Object.values(data))
             return {error: false, code: null, message: "Insert succede", data: result}
         }

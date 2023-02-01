@@ -10,18 +10,24 @@ class Offerta extends Model {
         const stmt = `
         SELECT 
         o.id,
+        o.id_cliente,
         c.ragione_sociale as cliente,
         o.id_progetto,
-        p.impianto as progetto,
+        o.luogo,
+        o.impianto,
+        o.id_tipo_progetto,
+        tp.name as tipo_progetto,
         o.data_offerta,
-        o.importo,
+        o.data_accettazione,
+        o.importo_offerto,
+        o.importo_contrattato,
         o.kw,
         o.id_stato,
         s.name as stato
         FROM offerte o 
-        JOIN progetti p ON o.id_progetto = p.id
         JOIN stati s on o.id_stato = s.id and s.entita = 'offerta'
-        JOIN clienti c ON p.id_cliente = c.id
+        LEFT JOIN clienti c ON o.id_cliente = c.id
+        LEFT JOIN tipi_progetto tp ON o.id_tipo_progetto = tp.id
         where ${condition}
         `
         const result = await this.dbService.query(stmt, values)
