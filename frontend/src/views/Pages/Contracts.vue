@@ -39,10 +39,10 @@
       </card>
     </modal>
 
-    <pdf-modal :show="pdfmodal.show" :data="pdfmodal.data" :id_reference="pdfmodal.id_reference" @after-save="handleSavedFile"></pdf-modal>
+    <pdf-modal :show.sync="pdfmodal.show" :data="pdfmodal.data" :id_reference="pdfmodal.id_reference" @after-save="handleSavedFile"></pdf-modal>
 
     <milestone-modal 
-      :show="milestoneModal.show" 
+      :show.sync="milestoneModal.show" 
       :editable="milestoneModal.editable"
       :tableColumns="milestoneModal.tableColumns" 
       :tableData="milestoneModal.tableData" 
@@ -64,13 +64,41 @@
               </el-select>
 
               <div>
-                <base-input v-model="searchQuery" prepend-icon="fas fa-search" placeholder="Search..."> </base-input>
+                <el-form :inline="true" :model="filters">
+                  <el-form-item>
+                    <el-select placeholder="Cliente" v-model="filters.id_cliente" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item>
+                    <el-select placeholder="Progetto" v-model="filters.id_progetto" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item>
+                    <base-button type="primary" @click="handleSearch">Cerca</base-button>
+                  </el-form-item>
+
+                </el-form >
               </div>
             </div>
 
-            <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" @sort-change="sortChange" >
+            <el-table 
+              :data="queriedData" 
+              row-key="id" 
+              header-row-class-name="thead-light"
+            >
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter"></el-table-column>
+              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter">
+                <template #default="scope" v-if="column.prop == 'milestone'">
+                  <el-tag v-if="scope.row.milestone" disable-transitions :type="scope.row.tagClass" >{{ scope.row.milestone }}</el-tag
+                  >
+                </template>
+              </el-table-column>
               <!-- Action Column -->
               <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
@@ -102,7 +130,7 @@
   </div>
 </template>
 <script>
-import { Table, TableColumn, Select, Option } from 'element-ui';
+import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card, Tag } from 'element-ui';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import { BasePagination } from '@/components';
 import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
@@ -126,6 +154,13 @@ export default {
     Modal,
     BasePagination,
     RouteBreadCrumb,
+    [Row.name]: Row,
+    [Col.name]: Col,
+    [Card.name]: Card,
+    [Form.name]: Form,
+    [Tag.name]: Tag,
+    [FormItem.name]: FormItem,
+    [DatePicker.name]: DatePicker,
     [Select.name]: Select,
     [Option.name]: Option,
     [Table.name]: Table,
@@ -139,36 +174,42 @@ export default {
       hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_cliente'],
       tableColumns: [],
       tableData: [],
+      baseTableData: [],
       selectedRow: {},
       selectedRows: [],
       pagination:{
         perPage:25
       },
+      filters: {
+        id_cliente: '',
+        id_progetto: ''
+      },
       modal: {
         fields:[],
-        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by', 'id_progetto','cliente'],
+        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by', 'id_progetto','cliente','id_cliente'],
         show: false,
         type: '', //insert|update
         title: '',
         data: {}
       },
       pdfmodal: {
-        show: false,
-        title: 'Gestisci file',
         data: [],
+        title: 'Gestisci file',
+        show: false,
         id_reference: -1,
         newFile: {}
       },
       milestoneModal: {
-        show: false,
         editable: true,
+        show: false,
         tableColumns:[],
         tableData:[],
         id_reference: -1,
         total: 0
       },
       projectSelectOptions: [],
-      statusOfferSelectOptions: []
+      statusOfferSelectOptions: [],
+      customerSelectOptions: []
     };
   },
   created() {
@@ -179,14 +220,31 @@ export default {
     )
   },
   methods: {
+    handleSearch() {
+      const headFilters = Object.fromEntries(Object.entries(this.filters).filter( el => el[1] ))
+      const hasFilterHead = !lodash.isEmpty(headFilters)
+      let filteredOffers = []
+      if( hasFilterHead ) {
+        filteredOffers = this.baseTableData
+        .filter( el => Object.entries(headFilters).every( f => {
+          console.log(el[f[0]], f[1], el[f[0]] == f[1])
+          return f[1] ? el[f[0]] == f[1] : true
+        } ))
+      }
+      this.tableData = filteredOffers.length ? filteredOffers : this.baseTableData
+    },
+
     async fetchData( ) {
       
       await this.$store.dispatch(__.GETALL,this.model)
       await this.$store.dispatch(__.GETALL,'progetto')
+      await this.$store.dispatch(__.GETALL,'cliente')
+      await this.$store.dispatch(__.GETALL,'milestone')
       await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]}),
 
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusOfferSelectOptions = this.$store.getters.statusSelectOptions
+      this.customerSelectOptions = this.$store.getters.customerSelectOptions
 
       this.modal.fields = this.$store.state.contracts.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
@@ -214,7 +272,7 @@ export default {
         }
       })
 
-      this.tableColumns = this.$store.state.contracts.fields
+      this.tableColumns = [...this.$store.state.contracts.fields,'milestone']
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -242,7 +300,33 @@ export default {
           }
         })
       
-      this.tableData = this.$store.state.contracts.records
+      this.tableData = this.baseTableData = this.$store.state.contracts.records.map( c => {
+        const milestone = this.$store.state.milestone.records.filter( m => m.id_contratto == c.id)
+        
+        const daFatturare = milestone.filter( m => m.id_stato == 10) || []
+        const fatturato = milestone.filter( m => m.id_stato == 11) || [] 
+        const pagato = milestone.filter( m => m.id_stato == 12) || []
+
+        let tagClass = ''
+        let milestoneToShow = ''
+
+        if ( daFatturare.length ) {
+          tagClass = 'danger'
+          milestoneToShow = (daFatturare.slice(-1).pop()).descrizione
+        }
+        else if (fatturato.length ) {
+          tagClass = 'warning'
+          milestoneToShow = (fatturato.slice(-1).pop()).descrizione
+        }
+        else if (pagato.length) {
+          tagClass = 'success'
+          milestoneToShow = (pagato.slice(-1).pop()).descrizione
+        }
+        
+        return {...c, milestone: milestoneToShow, tagClass: tagClass}
+      })
+
+      this.handleSearch()
     },
 
     async openMilestoneModal( row ) {
@@ -253,7 +337,7 @@ export default {
       } 
       await this.$store.dispatch(__.GETWHERE, payload)
 
-      this.milestoneModal.tableColumns = this.$store.state.milestone.fields
+      this.milestoneModal.tableColumns = (this.$store.state.milestone.fields || [])
       .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
       .map( f => {
         switch(f){
@@ -313,7 +397,7 @@ export default {
             }
         }
       })
-      this.milestoneModal.tableData = this.$store.state.milestone.records
+      this.milestoneModal.tableData = this.$store.state.milestone.records || []
       this.milestoneModal.id_reference = row.id
       this.milestoneModal.total = parseFloat(row.importo_contrattato)
       this.milestoneModal.show = true
@@ -449,6 +533,7 @@ export default {
       this.milestoneModal.tableData = this.$store.state.milestone.records
       this.milestoneModal.show = false
       this.$notify({type:'success', message: `Milestones salvate correttamente`})
+      await this.fetchData()
     }
   }
 };

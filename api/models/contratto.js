@@ -10,6 +10,7 @@ class Contratto extends Model {
         const stmt = `
         SELECT 
         o.id,
+        c.id as id_cliente,
         c.ragione_sociale as cliente,
         o.id_progetto,
         p.impianto as progetto,

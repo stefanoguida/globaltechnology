@@ -3,6 +3,18 @@ class Model {
         this.dbService = require('../services/db')
         this.helper = require('../helper')
     }
+
+    async descTable ( table ) {
+        try {
+            const stmt = `desc ${table}` 
+            const result = await this.dbService.query(stmt)
+            return result.length ? result.map(r=>r.Field) : {}
+        }
+        catch( e ) {
+            console.log(e)
+            return {}
+        }
+    }
     
     async getFirst ( cond = [] ) {
         try {

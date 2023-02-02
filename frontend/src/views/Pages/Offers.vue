@@ -114,41 +114,41 @@
               </el-select>
   
               <div>
-                  <el-form :inline="true" :model="filters">
-                    <el-form-item>
-                      <el-select placeholder="Cliente" v-model="filters.testata.id_cliente" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.value"></el-option>
-                      </el-select>
-                    </el-form-item>
-  
-                    <el-form-item>
-                      <el-select placeholder="Progetto" v-model="filters.testata.id_progetto" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
-                      </el-select>
-                    </el-form-item>
-  
-                    <el-form-item>
-                      <el-select placeholder="Stato" v-model="filters.testata.id_stato" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="status in statusOfferSelectOptions" :key="status.value" :label="status.text" :value="status.value"></el-option>
-                      </el-select>
-                    </el-form-item>
+                <el-form :inline="true" :model="filters">
+                  <el-form-item>
+                    <el-select placeholder="Cliente" v-model="filters.testata.id_cliente" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.value"></el-option>
+                    </el-select>
+                  </el-form-item>
 
-                    <el-form-item>
-                      <el-select placeholder="Fornitura" v-model="filters.dettaglio.id_servizio" filterable>
-                        <el-option value=""></el-option>
-                        <el-option v-for="status in servicesSelectOptions" :key="status.value" :label="status.text" :value="status.value"></el-option>
-                      </el-select>
-                    </el-form-item>
+                  <el-form-item>
+                    <el-select placeholder="Progetto" v-model="filters.testata.id_progetto" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
+                    </el-select>
+                  </el-form-item>
 
-                    <el-form-item>
-                      <base-button type="primary" @click="handleSearch">Cerca</base-button>
-                    </el-form-item>
+                  <el-form-item>
+                    <el-select placeholder="Stato" v-model="filters.testata.id_stato" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="status in statusOfferSelectOptions" :key="status.value" :label="status.text" :value="status.value"></el-option>
+                    </el-select>
+                  </el-form-item>
 
-                  </el-form >
-                </div>
+                  <el-form-item>
+                    <el-select placeholder="Fornitura" v-model="filters.dettaglio.id_servizio" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="status in servicesSelectOptions" :key="status.value" :label="status.text" :value="status.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item>
+                    <base-button type="primary" @click="handleSearch">Cerca</base-button>
+                  </el-form-item>
+
+                </el-form >
+              </div>
             </div>
   
             <el-table 
@@ -157,7 +157,6 @@
               header-row-class-name="thead-light" 
               @sort-change="sortChange" 
               @current-change="handleRowSelect"
-              border
             >
               <el-table-column type="expand" >
                 <template #default="props">
@@ -321,18 +320,33 @@ export default {
   },
   methods: {
     handleSearch() {
-      const filteredOfferRows = this.$store.state.offerRows.records
-      .filter( el => Object.entries(this.filters.dettaglio).every( f => f[1] ? el[f[0]] == f[1] : true ) )
-      .reduce( (acc, curr) => {
-        acc.push(curr.id_offerta)
-        return acc
-      }, [])
+      const headFilters = Object.fromEntries(Object.entries(this.filters.testata).filter( el => el[1] ))
+      const detailFilters = Object.fromEntries(Object.entries(this.filters.dettaglio).filter( el => el[1] ))
 
-      const filteredOffers = this.$store.state.offers.records
-      .filter( el => Object.entries(this.filters.testata).every( f => f[1] ? el[f[0]] == f[1] : true ))
-      .filter( el => filteredOfferRows.includes(el.id) )
+      const hasFilterHead = !lodash.isEmpty(headFilters)
+      const hasFilterDetail = !lodash.isEmpty(detailFilters)
 
-      this.tableData = filteredOffers
+      if (!hasFilterHead && !hasFilterDetail) {
+        this.tableData = this.$store.state.offers.records
+      }
+
+      let filteredOfferRows = []
+      if( hasFilterDetail ){
+        filteredOfferRows = this.$store.state.offerRows.records
+        .filter( el => Object.entries(detailFilters).every( f => f[1] ? el[f[0]] == f[1] : true ) )
+        .reduce( (acc, curr) => {
+          acc.push(curr.id_offerta)
+          return acc
+        }, [])
+      }
+
+      let filteredOffers = []
+      if( hasFilterHead || hasFilterDetail ) {
+        filteredOffers = this.$store.state.offers.records
+        .filter( el => Object.entries(headFilters).every( f => f[1] ? el[f[0]] == f[1] : true ))
+        .filter( el => filteredOfferRows.length ? filteredOfferRows.includes(el.id) : true )
+        this.tableData = filteredOffers
+      }
     },
 
     async fetchData( ) {
@@ -525,6 +539,8 @@ export default {
               }
             }
           })
+        
+        this.handleSearch()
       }
       catch ( err ) {
         console.log(err)
@@ -536,8 +552,14 @@ export default {
     },
 
     async handleShowPDF( index, row ) {
-      // const row = this.selectedRow
-      await this.$store.dispatch(__.GETWHERE, {model: 'file', cond: [{field:"id_progetto", op:"=", value:row.id_progetto},{field:"tipo", op:"=", value:"offerta"}]})
+      const payload = {
+        model: 'file', 
+        cond: [
+          { field:"id_riferimento", op:"=", value:row.id },
+          { field:"tipo", op:"=", value:"offerta" }
+        ]
+      }
+      await this.$store.dispatch(__.GETWHERE, payload)
       this.pdfmodal.data = this.$store.state.file.records
       this.pdfmodal.show = true
     },
@@ -735,15 +757,16 @@ export default {
             buttonsStyling: false
           })
           .then( async result => {
-            payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
-            await this.saveOffer( method, payload )
-            await this.saveOfferRows()
-            const id_contratto = await this.saveContract( payload )
-            await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+            if (result.isConfirmed){ 
+              payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
+              await this.saveOffer( method, payload )
+              await this.saveOfferRows()
+              const id_contratto = await this.saveContract( payload )
+              await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
 
-            this.modal.show = false
-            await this.fetchData()
-
+              this.modal.show = false
+              await this.fetchData()
+            }
           })
           .catch( error => console.log(error) )
         }
@@ -880,7 +903,6 @@ export default {
 
       const data = {
         type:'offerta', 
-        id: this.selectedRow.id_ordine, 
         id_riferimento: this.selectedRow.id, 
         file: this.pdfmodal.newFile 
       }
@@ -907,8 +929,14 @@ export default {
           },
           icon: 'success'
         })
-
-        await this.$store.dispatch(__.GETWHERE, {model: 'file', cond: [{field:"id_progetto", op:"=", value:this.selectedRow.id_progetto},{field:"tipo", op:"=", value:"ordine"}]})
+        const payload = {
+          model: 'file', 
+          cond: [
+            {field:"id_riferimento", op:"=", value:this.selectedRow.id},
+            {field:"tipo", op:"=", value:"offerta"}
+          ]
+        }
+        await this.$store.dispatch(__.GETWHERE, payload)
         this.pdfmodal.data = this.$store.state.file.records
       }
     },

@@ -169,8 +169,7 @@ export default class BaseService {
       this.setHeaders()  
       const formData = new FormData();
       Object.entries(data).forEach( d => formData.append(d[0], d[1]) )
-      this.headers['Content-Type'] = 'multipart/form-data'
-      const response = await this.axios.post(`${this.SERVICE_URL}uploadFile`, formData, {headers: this.headers})
+      const response = await this.axios.post(`${this.SERVICE_URL}uploadFile`, formData, {headers: {...this.headers,'Content-Type': 'multipart/form-data'}})
       return response.data
     }
     catch ( error ) {
@@ -191,6 +190,16 @@ export default class BaseService {
     }
   }
 
-  
+  async descTable ( table ) {
+    try {
+      this.setHeaders()  
+      const response = await this.axios.get(`${this.SERVICE_URL}descTable/${table}`, {headers: this.headers})
+      return response.data
+    }
+    catch ( error ) {
+      console.log(error)
+      return {}
+    }
+  }
 
 }

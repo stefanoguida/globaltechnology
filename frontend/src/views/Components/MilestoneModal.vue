@@ -135,12 +135,20 @@
         return 100 - tot_percentage 
       }
     },
+    watch: {
+      show(newVal, oldVal) {
+        if (newVal) this.init() 
+      }
+    },
     data(){
       return {
-        
+        dataFields: []
       }
     },
     methods: {
+      async init() {
+        await this.$store.dispatch(__.DESCTABLE, 'milestones')
+      },
       addNewEmptyRow() {
         const emptyRow = Object.keys(this.tableData[0]).reduce( (acc,curr) => {
           acc[curr] = curr == 'id_stato' ? 10 : ''

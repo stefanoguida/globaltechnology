@@ -15,8 +15,18 @@ class Milestone extends Model {
         JOIN stati s ON m.id_stato = s.id and s.entita = 'milestone'
         where ${condition}
         `
-        const result = await this.dbService.query(stmt, values)
-        return result.length ? result : []
+        let result = await this.dbService.query(stmt, values)
+        if ( !result.length ) {
+            result = await this.dbService.query(`desc ${this.table}`)
+            result = result.reduce( (acc, curr) => {
+                acc[0] = {...acc[0], [curr.Field]: ''}
+                return acc
+            },[{}])
+
+            result[0].id_stato = 10
+            result[0].stato = 'Da Fatturare'
+        } 
+        return result 
     }
 
     async insert (data = {}) {

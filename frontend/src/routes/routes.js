@@ -53,6 +53,7 @@ const Offers = () => import('@/views/Pages/Offers.vue');
 const Orders    = () => import('@/views/Pages/Orders.vue');
 const OrderRows    = () => import('@/views/Pages/OrderRows.vue');
 const Services  = () => import('@/views/Pages/Services.vue');
+const Milestones  = () => import('@/views/Pages/Milestones.vue');
 
 
 let componentsMenu = {
@@ -292,6 +293,11 @@ const GlobalTechPages = {
       path: 'services',
       name: 'services',
       component: Services
+    },
+    {
+      path: 'milestones',
+      name: 'milestones',
+      component: Milestones
     }
   ]
 }

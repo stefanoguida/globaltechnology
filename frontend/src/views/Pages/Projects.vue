@@ -66,8 +66,28 @@
               </el-select>
 
               <div>
-                <base-input v-model="searchQuery" prepend-icon="fas fa-search" placeholder="Search..."> </base-input>
+                <el-form :inline="true" :model="filters">
+                  <el-form-item>
+                    <el-select placeholder="Cliente" v-model="filters.id_cliente" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item>
+                    <el-select placeholder="Progetto" v-model="filters.id_progetto" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item>
+                    <base-button type="primary" @click="handleSearch">Cerca</base-button>
+                  </el-form-item>
+
+                </el-form >
               </div>
+
             </div>
 
             <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" @sort-change="sortChange" >
@@ -81,7 +101,7 @@
                 </template>
               </el-table-column>
               <!-- Action Column -->
-              <el-table-column align="right" label="Actions">
+              <el-table-column align="right" label="Actions" :min-width="100">
                 <div slot-scope="{$index, row}" class="d-flex">
                   <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
                     <i class="ni ni-atom"></i>
@@ -116,7 +136,7 @@
   </div>
 </template>
 <script>
-import { Table, TableColumn, Select, Option } from 'element-ui';
+import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card } from 'element-ui';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import { BasePagination, BaseProgress, BaseSlider } from '@/components';
 import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
@@ -139,6 +159,12 @@ export default {
     BaseProgress,
     BaseSlider,
     RouteBreadCrumb,
+    [Row.name]: Row,
+    [Col.name]: Col,
+    [Card.name]: Card,
+    [Form.name]: Form,
+    [FormItem.name]: FormItem,
+    [DatePicker.name]: DatePicker,
     [Select.name]: Select,
     [Option.name]: Option,
     [Table.name]: Table,
@@ -161,6 +187,10 @@ export default {
       },
       pagination:{
         perPage:25
+      },
+      filters: {
+        id_cliente: '',
+        id_progetto: ''
       },
       modal: {
         fields:[],
@@ -190,6 +220,20 @@ export default {
     )
   },
   methods: {
+    handleSearch() {
+      const headFilters = Object.fromEntries(Object.entries(this.filters).filter( el => el[1] ))
+      const hasFilterHead = !lodash.isEmpty(headFilters)
+      let filteredOffers = []
+      if( hasFilterHead ) {
+        filteredOffers = this.$store.state.projects.records
+        .filter( el => Object.entries(headFilters).every( f => {
+          console.log(el[f[0]], f[1], el[f[0]] == f[1])
+          return f[1] ? el[f[0]] == f[1] : true
+        } ))
+      }
+      this.tableData = filteredOffers.length ? filteredOffers : this.$store.state.projects.records
+    },
+
     async fetchData( ) {
       
       await this.$store.dispatch(__.GETALL,this.model)
@@ -199,6 +243,7 @@ export default {
       await this.$store.dispatch(__.GETALL,'milestone')
 
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
+      this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusSelectOptions  = this.$store.getters.statusSelectOptions
 
       this.modal.fields = this.$store.state.projects.fields

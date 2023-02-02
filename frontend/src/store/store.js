@@ -205,6 +205,17 @@ const actions = {
         }
     },
 
+    async [__.DESCTABLE]({commit}, table) {
+        try {
+            const response = await baseService.descTable(table)
+            commit(__.DESCTABLE,{table,data:response.data})
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
+    },
+
     async [__.GET_RUNNING_OFFERS]({commit}) {
         try {
             const response = await baseService.getRunnigOffers()
@@ -307,6 +318,12 @@ const mutations = {
         state[modelMapping[data.model] || data.model ] = {}
         state[modelMapping[data.model] || data.model ].fields = Object.keys(data.data[0])
         state[modelMapping[data.model] || data.model ].records = data.data
+    },
+
+    [__.DESCTABLE](state, {table, data}) {
+        table = table.charAt(0).toUpperCase() + table.toLowerCase().slice(1)
+        Vue.set(state[`tableDesc${table}` ], {})
+        Vue.set(state[`tableDesc${table}` ],'fields',data)
     },
 
     [__.UPLOAD](state, data) {},
