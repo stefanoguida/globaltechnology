@@ -18,12 +18,25 @@
             <small>{{modal.title}}</small>
           </div>
           <form role="form">
-            <div v-for="field in modal.fields.filter(t=>t.label && t.prop)">
-              <base-input :label="field.label"  v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label" ></base-input>
+            <div v-for="field in modal.fields">
+              <base-input v-if="field.type == 'input'" :label="field.label" v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label" ></base-input>
+              <base-input v-else-if="field.type == 'select'" :label="field.label" alternative class="mb-3" :placeholder="field.label" >
+                <select class="form-control" v-model="modal.data[field.prop]">
+                  <option v-for="option in field.options" :value="option.value">{{ option.text }}</option>
+                </select>
+              </base-input>
+              <base-input v-else-if="field.type == 'date'" type="date" :label="field.label" v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label" ></base-input>
+              <base-input v-else-if="field.type == 'textarea'" :label="field.label" alternative class="mb-3" :placeholder="field.label">
+                <textarea v-model="modal.data[field.prop]" class="form-control" rows="3"></textarea>
+              </base-input>
+              <base-input v-else-if="field.type == 'slider'" :label="field.label" alternative class="mb-3" >
+                <base-slider v-model="modal.data[field.prop]" :options="field.options || slider.options"></base-slider>
+                <label class="text-xs">Milestone: {{field.milestones}}</label>
+              </base-input>
             </div>
             <div class="text-right">
               <base-button type="primary" class="my-4" @click="modal.show = false">Cancel</base-button>
-              <base-button type="primary" class="my-4" @click="handleSaveCustomer">Save</base-button>
+              <base-button type="primary" class="my-4" @click="handleSave">Save</base-button>
             </div>
           </form>
         </template>
@@ -46,9 +59,15 @@
                 <base-input v-model="searchQuery" prepend-icon="fas fa-search" placeholder="Search..."> </base-input>
               </div>
             </div>
-            <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" @sort-change="sortChange" @selection-change="selectionChange">
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column"></el-table-column>
-              <el-table-column min-width="180px" align="right" label="Actions">
+            <el-table 
+              :data="queriedData" 
+              row-key="id" 
+              header-row-class-name="thead-light"
+            >
+              <!-- All columns -->
+              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter"></el-table-column>
+              <!-- Action Column -->
+              <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
                   <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                     <i class="text-white ni ni-ruler-pencil"></i>
@@ -81,7 +100,7 @@
 import { Table, TableColumn, Select, Option } from 'element-ui';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import { BasePagination } from '@/components';
-import clientPaginationMixin from '../Tables/PaginatedTables/clientPaginationMixin'
+import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
 import DashboardHeader from '../Dashboard/DashboardHeader.vue';
@@ -89,7 +108,7 @@ import DashboardHeader from '../Dashboard/DashboardHeader.vue';
 import * as __ from '../../store/constants'
 
 export default {
-  mixins: [clientPaginationMixin],
+  mixins: [searchTableMixin],
   components: {
     DashboardHeader,
     Modal,
@@ -116,7 +135,11 @@ export default {
         type: '', //insert|update
         title: '',
         data: {}
-      }
+      },
+      pagination:{
+        perPage:25
+      },
+      serviceTypeSelectOptions: []
     };
   },
   created() {
@@ -130,13 +153,28 @@ export default {
     async fetchData( ) {
       
       await this.$store.dispatch(__.GETALL,this.model)
-      
-      console.log(this.$store.state.services)
-
+      await this.$store.dispatch(__.GETALL,'tipo_servizio')
+      this.serviceTypeSelectOptions = this.$store.getters.serviceTypeSelectOptions
 
       this.modal.fields = this.$store.state.services.fields
       .filter( f => !this.modal.hiddenFields.includes(f))
-      .map( f => ({prop: f, label: f.replace(/^\w/, c => c.toUpperCase())}))
+      .map( f => {
+        switch(f){
+          case 'tipo':
+            return {
+              type: 'select',
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+              options: this.serviceTypeSelectOptions
+            }
+          default: 
+            return {
+              type: 'input',
+              prop: f, 
+              label: f.replace(/^\w/, c => c.toUpperCase()),
+            }
+        }
+      })
 
       this.tableColumns = this.$store.state.services.fields
       .filter( f => !this.tableHiddenFields.includes(f))
@@ -159,7 +197,7 @@ export default {
       this.modal.show = true
       this.modal.title = 'Update customer'
     },
-    async handleSaveCustomer () {
+    async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
       const data = {
         model: this.model, 
@@ -178,8 +216,9 @@ export default {
         this.modal.show = false
       }
     },
+
     handleDelete(index, row) {
-      swal({
+      swal.fire({
         title: 'Sicuro?',
         text: `Questa azione non può essere annullata!`,
         type: 'warning',
@@ -193,7 +232,7 @@ export default {
       .then(result => {
         if (result.value) {
           this.deleteRow(row);
-          swal({
+          swal.fire({
             title: 'Cancellato!',
             text: `Hai cancellato ${row.name}`,
             type: 'success',
@@ -203,13 +242,13 @@ export default {
         }
       });
     },
-    deleteRow(row) {
-      let indexToDelete = this.tableData.findIndex(
-        tableRow => tableRow.id === row.id
-      );
-      if (indexToDelete >= 0) {
-        this.tableData.splice(indexToDelete, 1);
-      }
+    async deleteRow(row) {
+      await this.$store.dispatch(__.DELETE,{model:this.model, id:row.id})
+      await this.fetchData()
+      // let indexToDelete = this.tableData.findIndex( tableRow => tableRow.id === row.id );
+      // if (indexToDelete >= 0) {
+      //   this.tableData.splice(indexToDelete, 1);
+      // }
     },
     selectionChange(selectedRows) {
       this.selectedRows = selectedRows

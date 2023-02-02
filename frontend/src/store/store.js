@@ -19,6 +19,7 @@ const modelMapping = {
     riga_offerta: "offerRows",
     pagamento_ordine: "orderPayments",
     tipo_progetto: "projectTypes",
+    tipo_servizio: "serviceTypes",
     stato: "status",
 }
 
@@ -71,6 +72,9 @@ const getters = {
     },
     servicesSelectOptions(state){
         return state.services.records.map( r => ({text: r.name, value: r.id}) )
+    },
+    serviceTypeSelectOptions(state){
+        return state.serviceTypes.records.map( r => ({text: r.name, value: r.code}) )
     },
     projectTypeSelectOptions(state){
         return state.projectTypes.records.map( r => ({text: r.name, value: r.id}) )
