@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: global_technology_frontend
     environment:
-      - API_HOST=$API_HOST
+      - VUE_APP_API_HOST=$API_HOST
     volumes:
       - shared_storage:/usr/share/nginx/html/storage
     ports:
@@ -22,7 +22,7 @@ services:
 
     container_name: global_technology_frontend_dev
     environment:
-      - API_HOST=$API_HOST
+      - VUE_APP_API_HOST=$API_HOST
     volumes:
       - ./frontend:/app
       - /app/node_modules
