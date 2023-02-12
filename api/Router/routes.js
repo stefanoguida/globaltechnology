@@ -25,6 +25,30 @@ const storage = multer.diskStorage({
   })
 const upload = multer({storage: storage})
 
+router.get('/getContractsPerMonth', async (req, res, next) => {
+    try {
+        const Model = factory.getInstanceOf('Contratto')
+        const data = await Model.getContractsPerMonth()
+        res.status(200).json({error: false, code: null, message: "success", data})
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: "Unknown error"})
+    }
+})
+
+router.get('/getKwPerMonth', async (req, res, next) => {
+    try {
+        const Model = factory.getInstanceOf('Contratto')
+        const data = await Model.getKwPerMonth()
+        res.status(200).json({error: false, code: null, message: "success", data})
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: "Unknown error"})
+    }
+})
+
 router.get('/getRunnigOffers', async (req, res, next) => {
     try {
         const Model = factory.getInstanceOf('Offerta')
@@ -246,6 +270,26 @@ router.put('/:module', async (req, res, next) => {
         const response = await Model.update(data, cond)
 
         res.status(200).json(response)
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: "Unknown error"})
+    }
+});
+
+// DELETE WHERE
+router.delete('/:module/where', async (req, res, next) => {
+    try {
+        const module = req.params.module
+        const condition = req.body.condition || []
+        if(!module || !condition.length ) {
+            res.status(400).json({error:true, code: null, message: "Missing module or condition"})
+        }
+        else {
+            const Model = factory.getInstanceOf(module)
+            const response = await Model.deleteWhere(condition)
+            res.status(200).json(response)
+        }
     } 
     catch ( error ) {
         console.log(error)

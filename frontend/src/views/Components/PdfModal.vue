@@ -75,6 +75,15 @@
         default: -1
       }
     },
+    watch: {
+      show(newVal, oldVal) {
+        if (!newVal) {
+          this.$emit("update:show", false);
+          this.$emit("close");
+        }
+
+      }
+    },
     data(){
       return {
         newFile: {}

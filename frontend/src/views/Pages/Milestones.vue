@@ -93,6 +93,7 @@
                 v-bind="column" 
                 :formatter="column.formatter"
                 :min-width="column.minWidth||0"
+                label-class-name="custom-header-class"
               ></el-table-column>
               <!-- Action Column -->
               <el-table-column align="right" label="Actions" :min-width="120">
@@ -229,7 +230,7 @@ export default {
               return {
                 type: 'input',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
               }
           }
         })
@@ -243,7 +244,7 @@ export default {
                 formatter: (row, column) => row[column.property],
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
               }
             }
           })
@@ -367,5 +368,8 @@ export default {
     position: absolute;
     left: 23px;
     top: 20px;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

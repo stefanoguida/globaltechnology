@@ -151,10 +151,10 @@
 
               <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" highlight-current-row @sort-change="sortChange" @current-change="handleRowSelect">
                 <!-- All columns -->
-                <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter"></el-table-column>
+                <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class" width="180"></el-table-column>
 
                 <!-- Action Column -->
-                <el-table-column align="right" label="Actions" min-width="100px">
+                <el-table-column align="right" label="Actions" min-width="200">
                   <div slot-scope="{$index, row}" class="d-flex">
                     <!-- <base-button @click.native="handleShowPDF(row)" type="primary" size="sm" icon >
                       <i class="text-white fa fa-file-pdf"></i>
@@ -226,7 +226,7 @@ export default {
       model: 'riga_ordine',
       title: 'Ordini',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','id_servizio'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','id_servizio','id_ordine'],
       tableColumns: [],
       tableData: [],
       tableDataCSSClassBase: 'container-fluid mt--6 col-12',
@@ -307,58 +307,58 @@ export default {
             return {
               type: 'date',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'progetto':
             return {
               type: 'select',
               prop: 'id_progetto', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.projectSelectOptions
             }
           case 'stato':
             return {
               type: 'select',
               prop: 'id_stato', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.statusOrderSelectOptions
             }
           case 'servizio':
             return {
               type: 'select',
               prop: 'id_servizio', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.servicesOrderSelectOptions
             }
           case 'importo':
             return {
               type: 'currency',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'costo':
             return {
               type: 'currency',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'costo_spedizione':
             return {
               type: 'currency',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'descrizione':
             return {
               type: 'textarea',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
               type: 'input',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
         }
       })
@@ -372,13 +372,13 @@ export default {
               formatter: (row, column) => new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(row[column.property]),
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'data_arrivo_merce':
             return {
               formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('YYYY-MM-DD') : '',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
@@ -597,5 +597,8 @@ export default {
 <style>
   .no-border-card .card-footer{
     border-top: 0;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

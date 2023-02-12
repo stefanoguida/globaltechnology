@@ -87,26 +87,21 @@
               </div>
             </div>
 
-            <el-table 
-              :data="queriedData" 
-              row-key="id" 
-              header-row-class-name="thead-light"
-            >
+            <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light">
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter">
+              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class">
                 <template #default="scope" v-if="column.prop == 'milestone'">
-                  <el-tag v-if="scope.row.milestone" disable-transitions :type="scope.row.tagClass" >{{ scope.row.milestone }}</el-tag
-                  >
+                  <el-tag v-if="scope.row.milestone" disable-transitions :type="scope.row.tagClass" >{{ scope.row.milestone }}</el-tag>
                 </template>
               </el-table-column>
               <!-- Action Column -->
-              <el-table-column align="right" label="Actions">
-                <div slot-scope="{$index, row}" class="d-flex">
+              <el-table-column align="right" label="Actions" >
+                <template #default="{$index, row}" class="d-flex">
                   <base-button @click.native="handleShowPDF(row)"  class="edit" type="primary" size="sm" icon>PDF</base-button>
                   <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
                     <i class="ni ni-atom"></i>
                   </base-button>
-                </div>
+                </template>
               </el-table-column>
             </el-table>
 
@@ -131,6 +126,7 @@
 </template>
 <script>
 import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card, Tag } from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import { BasePagination } from '@/components';
 import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
@@ -173,6 +169,7 @@ export default {
       searchColumns: ['progetto'],
       hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_cliente'],
       tableColumns: [],
+      originalTableData: [],
       tableData: [],
       baseTableData: [],
       selectedRow: {},
@@ -254,20 +251,20 @@ export default {
             return {
               type: 'date',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'progetto':
             return {
               type: 'select',
               prop: 'id_progetto', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.projectSelectOptions
             }
           default: 
             return {
               type: 'input',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
         }
       })
@@ -281,24 +278,26 @@ export default {
               formatter: (row, column) => moment(row[column.property]).format('YYYY-MM-DD'),
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'importo':
             return {
               formatter: (row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property]),
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
           }
         })
+      
+      this.tableColumns.push({type:'number', prop: 'prezzo_al_kw', label: 'Prezzo/KW', })
       
       this.tableData = this.baseTableData = this.$store.state.contracts.records.map( c => {
         const milestone = this.$store.state.milestone.records.filter( m => m.id_contratto == c.id)
@@ -323,7 +322,12 @@ export default {
           milestoneToShow = (pagato.slice(-1).pop()).descrizione
         }
         
-        return {...c, milestone: milestoneToShow, tagClass: tagClass}
+        return {
+          ...c, 
+          prezzo_al_kw: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(parseFloat(c.importo_contrattato) / parseFloat(c.kw)),
+          milestone: milestoneToShow, 
+          tagClass: tagClass
+        }
       })
 
       this.handleSearch()
@@ -345,7 +349,7 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'input',
               minWidth: 50,
               disabled:true
@@ -354,21 +358,22 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'textarea'
             }
           case 'Note':
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
-              type: 'textarea'
+              label: f.replace('_',' '),
+              type: 'textarea',
+              minWidth: 180
             }
           case 'stato': 
             return {
               formatter: (row, column) => row[column.property],
               prop: 'id_stato', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'select',
               options: this.statusOfferSelectOptions
             }
@@ -376,14 +381,14 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'number'
             }
           case 'importo_valore': 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'number',
               disabled:true
             }
@@ -391,7 +396,7 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'input',
               editable: true
             }
@@ -541,5 +546,8 @@ export default {
 <style>
   .no-border-card .card-footer{
     border-top: 0;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

@@ -65,7 +65,7 @@
               header-row-class-name="thead-light"
             >
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter"></el-table-column>
+              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class"></el-table-column>
               <!-- Action Column -->
               <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
@@ -164,21 +164,21 @@ export default {
             return {
               type: 'select',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.serviceTypeSelectOptions
             }
           default: 
             return {
               type: 'input',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
         }
       })
 
       this.tableColumns = this.$store.state.services.fields
       .filter( f => !this.tableHiddenFields.includes(f))
-      .map( f => ({prop: f, label: f.replace(/^\w/, c => c.toUpperCase())}))
+      .map( f => ({prop: f, label: f.replace('_',' ')}))
       
       this.tableColumns.unshift({type: 'selection'})
       this.tableData = this.$store.state.services.records
@@ -259,5 +259,8 @@ export default {
 <style>
   .no-border-card .card-footer{
     border-top: 0;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

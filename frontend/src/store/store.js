@@ -81,7 +81,7 @@ const getters = {
     },
     services(state){
         return state.services.records
-    },
+    }
 }
 
 const actions = {
@@ -186,6 +186,17 @@ const actions = {
             return error
         }
     },
+    
+    async [__.DELETEWHERE]({commit}, {model, cond}) {
+        try {
+            const response = await baseService.deleteWhere(model, cond)
+            commit(__.DELETEWHERE,{model, data: response.data})
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
+    },
 
     async [__.DELETEFILE]({commit}, id) {
         try {
@@ -284,6 +295,28 @@ const actions = {
         catch ( error ) {
             return error
         }
+    },
+
+    async [__.GET_CONTRACTS_PER_MONTH]({commit}) {
+        try {
+            const response = await baseService.getContractsPerMonth()
+            commit(__.GET_CONTRACTS_PER_MONTH,response)
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
+    },
+
+    async [__.GET_KW_PER_MONTH]({commit}) {
+        try {
+            const response = await baseService.getKwPerMonth()
+            commit(__.GET_KW_PER_MONTH,response)
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
     }
 }
 const mutations = {
@@ -334,6 +367,7 @@ const mutations = {
     [__.INSERT](state, data) {},
     [__.UPDATE](state, data) {},
     [__.DELETE](state, data) {},
+    [__.DELETEWHERE](state, data) {},
     [__.DELETEFILE](state, data){},
 
     [__.GET_RUNNING_OFFERS](state, data) {
@@ -354,6 +388,12 @@ const mutations = {
     [__.GET_PROJECTS_PROGRESS](state, data) {
         state.projects_progress = data
     },
+    [__.GET_CONTRACTS_PER_MONTH](state, data) {
+        state.contracts_per_month = data
+    },
+    [__.GET_KW_PER_MONTH](state, data) {
+        state.kw_per_month = data
+    }
 }
 
 export default new Vuex.Store({

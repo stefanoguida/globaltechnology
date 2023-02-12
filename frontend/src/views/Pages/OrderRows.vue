@@ -283,33 +283,33 @@ export default {
             return {
               type: 'date',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'progetto':
             return {
               type: 'select',
               prop: 'id_progetto', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.projectSelectOptions
             }
           case 'stato':
             return {
               type: 'select',
               prop: 'id_stato', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.statusOrderSelectOptions
             }
           case 'importo':
             return {
               type: 'currency',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
               type: 'input',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
         }
       })
@@ -323,14 +323,14 @@ export default {
               formatter: (row, column) => new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(row[column.property]),
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
           }
         })

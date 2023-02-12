@@ -1,45 +1,51 @@
 <template>
   <div>
-    <!-- <base-header class="pb-6">
-      <div class="row">
-        <div class="col-xl-12">
-          <div class="row">
-            <div class="col-md-3">
-              <stats-card title="Contratti" type="gradient-orange" :sub-title="kpi.accepted_offers" icon="ni ni-chart-pie-35">
-                <template slot="footer">
-                  <span class="text-success mr-2">su {{ kpi.running_offers }} offerte</span>
-                </template>
-              </stats-card>
-            </div>
-            <div class="col-md-3">
-              <stats-card title="Progetti" type="gradient-info" :sub-title="kpi.running_projects" icon="ni ni-chart-bar-32"></stats-card>
-            </div>
-            <div class="col-md-3">
-              <stats-card title="Kw" type="gradient-info" :sub-title="kpi.total_kw" icon="ni ni-chart-bar-32"></stats-card>
-            </div>
-            <div class="col-md-3">
-              <stats-card title="Fatturato" type="gradient-info" :sub-title="kpi.total_invoiced" icon="ni ni-chart-bar-32"></stats-card>
-            </div>
-          </div>
-        </div>
-      </div>
-    </base-header> -->
     <dashboard-header></dashboard-header>
 
     <!--Charts-->
     <div class="container-fluid mt--6">
       <div class="row">
-        <div class="col-xl-12">
-          <!-- <offers :tableData="offersData" :tableLimit="5"></offers> -->
-          <!-- <flat-data :tableData="flatData" :tableLimit="20"></flat-data> -->
+        <div class="col-xl-6">
+          <card type="default" header-classes="bg-transparent">
+            <div slot="header" class="row align-items-center">
+              <div class="col">
+                <h6 class="text-light text-uppercase ls-1 mb-1">Overview</h6>
+                <h5 class="h3 text-white mb-0">Kw/mese ultimi 12 mesi</h5>
+              </div>
+            </div>
+            <line-chart
+              :height="350"
+              ref="bigChart"
+              :chart-data="kwPerMonth.chartData"
+              :extra-options="kwPerMonth.extraOptions" 
+            >
+            </line-chart>
+          </card>
         </div>
+        <!-- <div class="col-xl-6">
+          <card type="default" header-classes="bg-transparent">
+            <div slot="header" class="row align-items-center">
+              <div class="col">
+                <h6 class="text-light text-uppercase ls-1 mb-1">Overview</h6>
+                <h5 class="h3 text-white mb-0">Contratti/mese ultimi 12 mesi</h5>
+              </div>
+            </div>
+            <line-chart
+              :height="350"
+              ref="bigChart"
+              :chart-data="contractsPerMonth.chartData"
+              :extra-options="contractsPerMonth.extraOptions" 
+            >
+            </line-chart>
+          </card>
+        </div> -->
       </div>
-      <!-- End charts-->
     </div>
   </div>
 </template>
 <script>
   // Charts
+  import * as chartConfigs from '@/components/Charts/config';
   import LineChart from '@/components/Charts/LineChart';
   import BarChart from '@/components/Charts/BarChart';
 
@@ -65,6 +71,7 @@
 
   import DashboardHeader from './DashboardHeader.vue';
   import * as __ from '../../store/constants'
+  import moment from 'moment'
 
   export default {
     components: {
@@ -86,7 +93,30 @@
       DashboardHeader
     },
     data() {
-      return {};
+      return {
+        kwPerMonth: {
+          activeIndex: 0,
+          chartData: {
+            datasets: [{ label: 'Kw', data: [] }],
+            labels: [],
+          },
+          extraOptions: chartConfigs.basicOptions,
+        },
+
+        contractsPerMonth: {
+          activeIndex: 0,
+          chartData: {
+            datasets: [
+              {
+                label: 'Contratti',
+                data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
+              }
+            ],
+            labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          },
+          extraOptions: chartConfigs.basicOptions,
+        }
+      };
     },
     computed: {
       kpi(){
@@ -102,21 +132,27 @@
       }
     },
     methods: {
-
-      async initKPI() {
+      async init() {
         await Promise.all([
           this.$store.dispatch(__.GET_RUNNING_OFFERS),
           this.$store.dispatch(__.GET_ACCEPTED_OFFERS),
           this.$store.dispatch(__.GET_RUNNING_PROJECTS),
           this.$store.dispatch(__.GET_TOTAL_KW),
           this.$store.dispatch(__.GET_TOTAL_INVOICED),
-
-          // this.$store.dispatch(__.GETFLATDATA),
+          this.$store.dispatch(__.GET_CONTRACTS_PER_MONTH),
+          this.$store.dispatch(__.GET_KW_PER_MONTH)
         ])
+
+        this.kwPerMonth.chartData = this.$store.state.kw_per_month.data.reduce( (acc,curr) => {
+          acc.datasets[0].data.push(curr.kw)
+          acc.labels.push(moment(curr.data_accettazione).format('MMM'))
+          return acc
+        } ,this.kwPerMonth.chartData);
+        
       }
     },
     async mounted() {
-      await this.initKPI()
+      await this.init()
     }
   };
 </script>

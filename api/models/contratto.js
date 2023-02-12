@@ -58,5 +58,37 @@ class Contratto extends Model {
             return []
         }
     }
+    async getKwPerMonth(){
+        try {
+            const stmt = `
+            SELECT date_format(data_accettazione,'%Y-%m-%d') data_accettazione, sum(kw) kw
+            FROM ${this.table} 
+            WHERE date(data_accettazione) >= date(data_accettazione) - interval 12 month
+            GROUP BY YEAR(data_accettazione), MONTH(data_accettazione)
+            ORDER BY YEAR(data_accettazione), MONTH(data_accettazione)
+            `
+            return await this.dbService.query(stmt)
+        }
+        catch ( err ) {
+            console.log(err)
+            return []
+        }
+    }
+    async getContractsPerMonth(){
+        try {
+            const stmt = `
+            SELECT date_format(data_accettazione,'%Y-%m-%d') data_accettazione, count(*) num_contracts
+            FROM ${this.table} 
+            WHERE date(data_accettazione) >= date(data_accettazione) - interval 12 month
+            GROUP BY YEAR(data_accettazione), MONTH(data_accettazione)
+            ORDER BY YEAR(data_accettazione), MONTH(data_accettazione)
+            `
+            return await this.dbService.query(stmt)
+        }
+        catch ( err ) {
+            console.log(err)
+            return []
+        }
+    }
 }
 module.exports = Contratto

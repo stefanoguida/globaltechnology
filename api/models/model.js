@@ -49,6 +49,7 @@ class Model {
             if ( !Object.keys(data).length ) throw new Error("Missing data!")
             
             const stmt = `insert ignore into ${this.table} (${Object.keys(data).join(',')}) values (${Object.values(data).map( v => '?').join(',')})`
+            console.log(stmt)
             const result = await this.dbService.query(stmt, Object.values(data))
             return {error: false, code: null, message: "Insert succede", data: result}
         }
@@ -107,18 +108,45 @@ class Model {
         }
     }
 
+    async deleteWhere ( cond ) {
+        try {
+            if (!cond.length) throw new Error("Missing condition")
+            const {condition, values} = this.dbService.evaluateConditions(cond)
+            const stmt = `delete from ${this.table} where ${condition}`
+            console.log(stmt, condition, values)
+            await this.dbService.query(stmt, values)
+            return {error: false, code: null, message: "Delete succede"}
+        }
+        catch( error ) {
+            console.log(error)
+            switch (error.code) {
+                default: 
+                    return {error: true, code: null, message: "Unknown error"}
+            }
+        }
+    }
+
     async update ( data = {}, cond = [] ) {
         try {
-            if ( !this.helper.dependencies.lodash.isObject(data) ) throw new Error("Data seems not to be an Object!")
-            if ( !Object.keys(data).length ) throw new Error("Missing data!")
+            let datas
+            if( this.helper.dependencies.lodash.isArray(data) ) {
+                datas = data.filter(this.helper.dependencies.lodash.isObject)
+            }
+            else {
+                datas = [data].filter(this.helper.dependencies.lodash.isObject)
+            }
+
+            if( !datas.length ) throw new Error("Missing well structured data!")
     
-            const set = Object.keys(data).reduce( (acc, curr) => {
-                acc.push(curr + ' = ?' )
-                return acc
-            }, [] ).join(', ')
-            const {condition, values} = this.dbService.evaluateConditions(cond)
-            const stmt = `update ${this.table} set ${set} where ${condition}`
-            await this.dbService.query(stmt, [...Object.values(data), ...values])
+            for ( const _data of datas ){
+                const set = Object.keys(_data).reduce( (acc, curr) => {
+                    acc.push(curr + ' = ?' )
+                    return acc
+                }, [] ).join(', ')
+                const {condition, values} = this.dbService.evaluateConditions(cond)
+                const stmt = `update ${this.table} set ${set} where ${condition}`
+                await this.dbService.query(stmt, [...Object.values(_data), ...values])
+            }
             return {error: false, code: null, message: "Update succede"}
         }
         catch ( error ) {

@@ -49,7 +49,7 @@
 
             <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" @sort-change="sortChange" >
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column"></el-table-column>
+              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" label-class-name="custom-header-class"></el-table-column>
               <!-- Action Column -->
               <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
@@ -140,11 +140,11 @@ export default {
       
       this.modal.fields = this.$store.state.customers.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
-      .map( f => ({prop: f, label: f.replace(/^\w/, c => c.toUpperCase())}))
+      .map( f => ({prop: f, label: f.replace('_',' ')}))
 
       this.tableColumns = this.$store.state.customers.fields
       .filter( f => !this.hiddenColumns.includes(f))
-      .map( f => ({prop: f, label: f.replace(/^\w/, c => c.toUpperCase())}))
+      .map( f => ({prop: f, label: f.replace('_',' ')}))
       
       // this.tableColumns.unshift({type: 'selection'}) // Aggiunta in testa della colonna per la selezione multipla delle righe
 
@@ -235,5 +235,8 @@ export default {
 <style>
   .no-border-card .card-footer{
     border-top: 0;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

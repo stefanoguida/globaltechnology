@@ -21,10 +21,21 @@
           <form role="form">
             <div v-for="field in modal.fields">
               <base-input :type="field.type" :label="field.label" v-model="modal.data[field.prop]" alternative class="mb-3" :placeholder="field.label" >
-                  <select v-if="field.type == 'select'" class="form-control" v-model="modal.data[field.prop]" filterable>
-                    <option v-for="option in field.options" :value="option.value">{{ option.text }}</option>
-                  </select>
-                  <textarea v-if="field.type == 'textarea'" v-model="modal.data[field.prop]" class="form-control" rows="3"></textarea>
+                <div v-if="field.type=='checkbox'" class="row bg-white p-3" >
+                  <el-checkbox 
+                  class="ml-0 col-3" 
+                  style="display: flex" 
+                  v-for="option in field.options" 
+                  v-model="modal.choosenServices[option.id]"
+                  :inline="true" 
+                  >
+                    <div class="text-wrap align-self-center" style="max-width:100px">{{option.name}}</div>
+                  </el-checkbox>
+                </div>
+                <select v-if="field.type == 'select'" class="form-control" v-model="modal.data[field.prop]" filterable>
+                  <option v-for="option in field.options" :value="option.value">{{ option.text }}</option>
+                </select>
+                <textarea v-if="field.type == 'textarea'" v-model="modal.data[field.prop]" class="form-control" rows="3"></textarea>
               </base-input>
             </div>
             <div class="text-right">
@@ -196,9 +207,12 @@
                 v-bind="column" 
                 :formatter="column.formatter"
                 :min-width="column.minWidth||0"
+                label-class-name="custom-header-class"
+                width="180"
               ></el-table-column>
+
               <!-- Action Column -->
-              <el-table-column align="right" label="Actions" :min-width="120">
+              <el-table-column align="right" label="Actions" min-width="200">
                 <div slot-scope="{$index, row}" class="d-flex">
                   <base-button @click="handleShowPDF($index, row)"  class="edit" type="primary" size="sm" icon>PDF</base-button>
                   <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
@@ -223,7 +237,7 @@
   </div>
 </template>
 <script>
-import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card } from 'element-ui';
+import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card, Checkbox } from 'element-ui';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import FileInput from '@/components/Inputs/FileInput'
 import { BasePagination } from '@/components';
@@ -255,7 +269,8 @@ export default {
     [Select.name]: Select,
     [Option.name]: Option,
     [Table.name]: Table,
-    [TableColumn.name]: TableColumn
+    [TableColumn.name]: TableColumn,
+    [Checkbox.name]: Checkbox
   },
   data() {
     return {
@@ -265,6 +280,7 @@ export default {
       hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','id_cliente','id_tipo_progetto'],
       hiddenDetailColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_offerta','id_servizio','codice_fornitura'],
       tableColumns: [],
+      baseTableData: [],
       tableData: [],
       tableDetailsColumns: [],
       tableDetailsData: [],
@@ -289,7 +305,8 @@ export default {
         show: false,
         type: '', //insert|update
         title: '',
-        data: {}
+        data: {},
+        choosenServices:[]
       },
       detailModal: {
         fields:[],
@@ -297,7 +314,8 @@ export default {
         show: false,
         type: '', //insert|update
         title: '',
-        data: {}
+        data: {},
+        rowData: []
       },
       pdfmodal: {
         show: false,
@@ -327,7 +345,7 @@ export default {
       const hasFilterDetail = !lodash.isEmpty(detailFilters)
 
       if (!hasFilterHead && !hasFilterDetail) {
-        this.tableData = this.$store.state.offers.records
+        this.tableData = this.baseTableData
       }
 
       let filteredOfferRows = []
@@ -342,7 +360,7 @@ export default {
 
       let filteredOffers = []
       if( hasFilterHead || hasFilterDetail ) {
-        filteredOffers = this.$store.state.offers.records
+        filteredOffers = this.baseTableData
         .filter( el => Object.entries(headFilters).every( f => f[1] ? el[f[0]] == f[1] : true ))
         .filter( el => filteredOfferRows.length ? filteredOfferRows.includes(el.id) : true )
         this.tableData = filteredOffers
@@ -367,7 +385,13 @@ export default {
         this.servicesSelectOptions = this.$store.getters.servicesSelectOptions
         this.projectTypeSelectOptions = this.$store.getters.projectTypeSelectOptions
 
-        this.tableData = this.$store.state.offers.records
+        this.baseTableData =  this.$store.state.offers.records
+        .map( r => ({ 
+          ...r, 
+          prezzo_al_kw: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((parseFloat(r.importo_contrattato) || parseFloat(r.importo_offerto)) / parseFloat(r.kw))
+        }) )
+
+        this.tableData = this.baseTableData
         this.tableDetailsData = this.$store.state.offerRows.records
         this.selectedRow = this.tableData.sort( (a,b) => a.id<b.id ? -1 : 1)[0]
 
@@ -380,7 +404,7 @@ export default {
               return {
                 type: 'date',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'kw':
             case 'importo_contrattato':
@@ -388,44 +412,50 @@ export default {
               return {
                 type: 'number',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'progetto':
               return {
                 type: 'select',
                 prop: 'id_progetto', 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 options: this.projectSelectOptions
               }
             case 'tipo_progetto':
               return {
                 type: 'select',
                 prop: 'id_tipo_progetto', 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 options: this.projectTypeSelectOptions
               }
             case 'cliente':
               return {
                 type: 'select',
                 prop: 'id_cliente', 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 options: this.customerSelectOptions
               }
             case 'stato':
               return {
                 type: 'select',
                 prop: 'id_stato', 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 options: this.statusOfferSelectOptions
               }
             default: 
               return {
                 type: 'input',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
               }
           }
         })
+
+        const optionsServizi = this.$store.state.services.records.filter(r => r.tipo == 'servizio').map(r => lodash.pick(r,['id','name']) )
+        this.modal.fields.push({type: 'checkbox', prop: 'servizi', label: 'Servizi', options: optionsServizi})
+
+        const optionsForniture = this.$store.state.services.records.filter(r => r.tipo == 'fornitura').map(r => lodash.pick(r,['id','name']) )
+        this.modal.fields.push({type: 'checkbox', prop: 'forniture', label: 'Forniture', options: optionsForniture })
 
         this.detailModal.fields = this.$store.state.offerRows.fields
         .filter( f => !this.detailModal.hiddenColumns.includes(f))
@@ -435,40 +465,40 @@ export default {
               return {
                 type: 'select',
                 prop: 'id_servizio', 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 options: this.servicesSelectOptions
               }
             case 'descrizione':
               return {
                 type: 'textarea',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'data_arrivo_merce':
               return {
                 type: 'date',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'importo_offerto':
             case 'importo_contrattato':
               return {
                 type: 'number',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'pagamento':
               return {
                 type: 'select',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 options: [{text:'NO', value:0}, {text:'SI', value: 1}]
               }
             default: 
               return {
                 type: 'input',
                 prop: f, 
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
               }
           }
         })
@@ -482,7 +512,7 @@ export default {
                 formatter: (row, column) => row[column.property],
                 prop: f, 
                 sortable: false,
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
                 minWidth: 40
               }
             case 'data_accettazione':
@@ -491,7 +521,7 @@ export default {
                 formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('YYYY-MM-DD') : '',
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'importo_offerto':
             case 'importo_contrattato':
@@ -499,17 +529,19 @@ export default {
                 formatter: (row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property]),
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             default: 
               return {
                 formatter: (row, column) => row[column.property],
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
               }
             }
           })
+
+        this.tableColumns.push({type:'number', prop: 'prezzo_al_kw', label: 'Prezzo/KW', })
         
         this.tableDetailsColumns = this.$store.state.offerRows.fields
         .filter( f => !this.hiddenDetailColumns.includes(f))
@@ -521,21 +553,21 @@ export default {
                 formatter: (row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property]),
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             case 'pagamento':
               return {
                 formatter: (row, column) => row[column.property] ? 'Si' : 'No',
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase())
+                label: f.replace('_',' ')
               }
             default: 
               return {
                 formatter: (row, column) => row[column.property],
                 prop: f, 
                 sortable: true,
-                label: f.replace(/^\w/, c => c.toUpperCase()),
+                label: f.replace('_',' '),
               }
             }
           })
@@ -566,10 +598,14 @@ export default {
 
     openCreateModal(){
       this.modal.type = 'insert'
-      this.modal.data = {data_offerta: moment().format('YYYY-MM-DD'), id_stato: 1}
+      this.modal.data = {data_offerta: moment().format('YYYY-MM-DD'), id_stato: 1, id_tipo_progetto:1}
       this.modal.show = true
       this.modal.title = 'Crea nuovo contratto'
       this.modal.fields = this.modal.fields.filter( f => !['id_progetto','data_accettazione','importo_contrattato'].includes(f.prop))
+      this.modal.choosenServices = this.$store.state.services.records.reduce( (acc,curr) => {
+        acc[curr.id] = false
+        return acc
+      }, {})
     },
 
     openCreateDetailModal(offerId){
@@ -607,6 +643,16 @@ export default {
       this.modal.condition = [{field: 'id', op: '=', value: row.id}]
       this.modal.show = true
       this.modal.title = 'Modifica contratto'
+      const choosenServices = this.$store.state.offerRows.records
+      .filter( r => r.id_offerta == row.id )
+      .reduce( (acc,curr) => {
+        acc.push(curr.id_servizio)
+        return acc
+      }, [])
+      this.modal.choosenServices = this.$store.state.services.records.reduce( (acc,curr) => {
+        acc[curr.id] = choosenServices.includes(curr.id) 
+        return acc
+      }, {})
     },
 
     openUpdateDetailModal(index, row){
@@ -705,8 +751,55 @@ export default {
         this.modal = { ...this.modal, type: '', title: '', data: {} }
       }
       else {
-        this.$notify({type:'success', message: `Offerta salvato correttamente`})
+        await this.saveServices(method)
+        this.$notify({type:'success', message: `Offerta salvata correttamente`})
       }
+    },
+
+    async saveServices (method) {
+      if(method == __.UPDATE){
+        await this.$store.dispatch(__.DELETEWHERE, {
+          model: 'riga_offerta',
+          cond: [{field:'id_offerta', op:'=', value: this.selectedRow.id}]
+        })
+      }
+      const servicesData = {
+        model: 'riga_offerta',
+        payload: Object.entries(this.modal.choosenServices).reduce( (acc, curr) => {
+          if(curr[1]) acc.push({id_offerta: this.selectedRow.id, id_servizio: curr[0]})
+          return acc
+        }, []),
+        cond: [{field:'id_offerta', op:'=', value: this.selectedRow.id}]
+      }
+      console.log(servicesData)
+      await this.$store.dispatch(__.INSERT, servicesData)
+    },
+
+    async saveOrders ( id_progetto ) {
+      let data = {
+        model: 'ordine', 
+        payload: {id_progetto, id_stato: 7}, // stato da ordinare
+      }
+      const response = await this.$store.dispatch(__.INSERT,data)
+      const id_ordine = response.data.insertId
+      const id_forniture = this.$store.state.services.records.filter(r => r.tipo == 'fornitura').reduce( (acc, curr) => {
+        acc.push(curr.id)
+        return acc
+      }, [])
+      
+      const righe_ordine = Object.entries(this.modal.choosenServices)
+      .filter( s => s[1] && id_forniture.includes(parseInt(s[0])))
+      .reduce( (acc,curr) => {
+        acc.push({id_ordine, id_servizio: curr[0]})
+        return acc
+      }, [])
+      
+      data = {
+        model: 'riga_ordine',
+        payload: righe_ordine
+      }
+      console.log(data)
+      await this.$store.dispatch(__.INSERT,data)
     },
 
     async saveOfferRows () {
@@ -731,7 +824,7 @@ export default {
     async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
       
-      const payload = lodash.omit(this.modal.data, ['id', 'trec', 'created_at', 'created_by', 'updated_at', 'updated_by'])
+      const payload = lodash.omit(this.modal.data, ['id', 'trec', 'created_at', 'created_by', 'updated_at', 'updated_by', 'prezzo_al_kw'])
 
       if( method == __.INSERT ){
         payload.id_progetto = await this.saveProject()
@@ -757,16 +850,15 @@ export default {
             buttonsStyling: false
           })
           .then( async result => {
-            if (result.isConfirmed){ 
-              payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
-              await this.saveOffer( method, payload )
-              await this.saveOfferRows()
-              const id_contratto = await this.saveContract( payload )
-              await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+            payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
+            await this.saveOffer( method, payload )
+            await this.saveOfferRows()
+            const id_contratto = await this.saveContract( payload )
+            await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+            await this.saveOrders(payload.id_progetto)
 
-              this.modal.show = false
-              await this.fetchData()
-            }
+            this.modal.show = false
+            await this.fetchData()
           })
           .catch( error => console.log(error) )
         }
@@ -789,14 +881,12 @@ export default {
 
     async handleDetailSave () {
       const method = this.detailModal.type == 'insert' ? __.INSERT : __.UPDATE
-      console.log(this.detailModal.data)
       let {id, trec, created_at, created_by, updated_at, updated_by,  ...payload } = this.detailModal.data
       const data = {
         model: 'riga_offerta', 
         payload: lodash.omit(payload,['codice_fornitura','fornitura']), 
         cond: this.detailModal.condition || []
       }
-      console.log(data)
       const response = await this.$store.dispatch(method, data)
       if ( response.error ) {
         this.$notify({type:'danger', message:response.message})
@@ -992,5 +1082,8 @@ export default {
     position: absolute;
     left: 23px;
     top: 20px;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

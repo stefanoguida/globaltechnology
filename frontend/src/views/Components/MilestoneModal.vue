@@ -25,6 +25,7 @@
                 :formatter="column.formatter" 
                 :min-width="column.minWidth||0"
                 :readonly="!column.editable"
+                label-class-name="custom-header-class"
               >
                 <template slot-scope="scope">
                   <base-input v-if="column.type == 'select'" @blur="handleBlur(column.prop, scope.row)" >
@@ -137,7 +138,14 @@
     },
     watch: {
       show(newVal, oldVal) {
-        if (newVal) this.init() 
+        if (newVal) {
+          this.init() 
+        }
+        else{
+          this.$emit("update:show", false);
+          this.$emit("close");
+        }
+
       }
     },
     data(){
@@ -214,4 +222,7 @@
   };
 </script>
 <style>
+  .cell.custom-header-class {
+    word-break: break-word;
+  }
 </style>

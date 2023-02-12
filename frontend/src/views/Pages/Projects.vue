@@ -92,7 +92,7 @@
 
             <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" @sort-change="sortChange" >
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter">
+              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class">
                 <template v-slot="{row}" v-if="column.prop == 'completamento'">
                   <div class="align-items-center">
                     <span class="mr-2">{{row.completamento}}%</span>
@@ -254,14 +254,14 @@ export default {
             return {
               type: 'select',
               prop: 'id_cliente', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.customerSelectOptions
             }
           case 'stato':
             return {
               type: 'select',
               prop: 'id_stato', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               options: this.statusSelectOptions
             }
           case 'data_inizio':
@@ -269,25 +269,25 @@ export default {
             return {
               type: 'date',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           case 'completamento':
             return {
               type: 'slider',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
           case 'commenti':
             return {
               type: 'textarea',
               prop: f,
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
               type: 'input',
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
         }
       })
@@ -302,14 +302,14 @@ export default {
               formatter: (row, column) => moment(row[column.property]).format('YYYY-MM-DD'),
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase())
+              label: f.replace('_',' ')
             }
           default: 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
               sortable: true,
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
             }
           }
         })
@@ -371,7 +371,7 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'input',
               minWidth: 50,
               disabled:true
@@ -380,21 +380,21 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'textarea'
             }
           case 'Note':
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'textarea'
             }
           case 'stato': 
             return {
               formatter: (row, column) => row[column.property],
               prop: 'id_stato', 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'select',
               options: this.$store.getters.statusSelectOptions
             }
@@ -402,14 +402,14 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'number'
             }
           case 'importo_valore': 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'number',
               disabled:true
             }
@@ -417,7 +417,7 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace(/^\w/, c => c.toUpperCase()),
+              label: f.replace('_',' '),
               type: 'input',
               editable: true
             }
@@ -512,5 +512,8 @@ export default {
 <style>
   .no-border-card .card-footer{
     border-top: 0;
+  }
+  .cell.custom-header-class {
+    word-break: break-word;
   }
 </style>

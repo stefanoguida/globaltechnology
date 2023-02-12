@@ -23,7 +23,7 @@
         @row-click="handleRowClick"
         highlight-current-row
       >
-        <el-table-column v-for="field in fields" :key="field" :label="field[0].toUpperCase()+field.slice(1)" :prop="field" :formatter="formatter"></el-table-column>
+        <el-table-column v-for="field in fields" :key="field" :label="field[0].toUpperCase()+field.slice(1)" :prop="field" :formatter="formatter" label-class-name="custom-header-class"></el-table-column>
 
       </el-table>
     </div>
@@ -113,4 +113,7 @@
   }
 </script>
 <style>
+  .cell.custom-header-class {
+    word-break: break-word;
+  }
 </style>

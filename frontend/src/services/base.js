@@ -80,6 +80,12 @@ export default class BaseService {
       return response.data
   }
 
+  async deleteWhere(model, cond) {
+      this.setHeaders()   
+      const response = await this.axios.delete(`${this.SERVICE_URL}${model}/where`, {headers: this.headers, data:{condition: cond}})
+      return response.data
+  }
+
   async update(model, cond, payload) {
     try {
       this.setHeaders()   
@@ -194,6 +200,30 @@ export default class BaseService {
     try {
       this.setHeaders()  
       const response = await this.axios.get(`${this.SERVICE_URL}descTable/${table}`, {headers: this.headers})
+      return response.data
+    }
+    catch ( error ) {
+      console.log(error)
+      return {}
+    }
+  }
+
+  async getContractsPerMonth ( table ) {
+    try {
+      this.setHeaders()  
+      const response = await this.axios.get(`${this.SERVICE_URL}getContractsPerMonth`, {headers: this.headers})
+      return response.data
+    }
+    catch ( error ) {
+      console.log(error)
+      return {}
+    }
+  }
+
+  async getKwPerMonth ( table ) {
+    try {
+      this.setHeaders()  
+      const response = await this.axios.get(`${this.SERVICE_URL}getKwPerMonth`, {headers: this.headers})
       return response.data
     }
     catch ( error ) {
