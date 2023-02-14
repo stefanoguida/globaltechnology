@@ -152,15 +152,15 @@ router.post('/uploadFile', upload.any(), async (req, res, next) => {
     }
 } )
 
-router.get('/descTable/:table', async (req, res, next) => {
+router.get('/descTable/:model', async (req, res, next) => {
     try {
-        const table = req.params.table || ''
-        if (!table) {
-            res.send({ error: true, code: 'missingtable', message: 'Missing table' });
+        const model = req.params.model || ''
+        if (!model) {
+            res.send({ error: true, code: 'missingmodel', message: 'Missing model' });
             return;
         }
-        const Model = factory.getInstanceOf('Model')
-        const data = await Model.descTable( table )
+        const Model = factory.getInstanceOf(model)
+        const data = await Model.descTable()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
     catch ( error ) {

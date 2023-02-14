@@ -377,6 +377,8 @@ export default {
           this.$store.dispatch(__.GETALL,'tipo_progetto'),
           this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'offerta'}]}),
           this.$store.dispatch(__.GETALL,'cliente'),
+          this.$store.dispatch(__.DESCTABLE,'offerta'),
+          this.$store.dispatch(__.DESCTABLE,'riga_offerta')
         ])
 
         this.customerSelectOptions = this.$store.getters.customerSelectOptions
@@ -395,7 +397,7 @@ export default {
         this.tableDetailsData = this.$store.state.offerRows.records
         this.selectedRow = this.tableData.sort( (a,b) => a.id<b.id ? -1 : 1)[0]
 
-        this.modal.fields = this.$store.state.offers.fields
+        this.modal.fields = this.$store.state.tableDescOfferta.fields
         .filter( f => !this.modal.hiddenColumns.includes(f))
         .map( f => {
           switch(f){
@@ -457,7 +459,7 @@ export default {
         const optionsForniture = this.$store.state.services.records.filter(r => r.tipo == 'fornitura').map(r => lodash.pick(r,['id','name']) )
         this.modal.fields.push({type: 'checkbox', prop: 'forniture', label: 'Forniture', options: optionsForniture })
 
-        this.detailModal.fields = this.$store.state.offerRows.fields
+        this.detailModal.fields = this.$store.state.tableDescRigaOfferta.fields
         .filter( f => !this.detailModal.hiddenColumns.includes(f))
         .map( f => {
           switch(f){
@@ -503,7 +505,7 @@ export default {
           }
         })
 
-        this.tableColumns = this.$store.state.offers.fields
+        this.tableColumns = this.$store.state.tableDescOfferta.fields
         .filter( f => !this.hiddenColumns.includes(f))
         .map( f => {
           switch(f){
@@ -543,7 +545,7 @@ export default {
 
         this.tableColumns.push({type:'number', prop: 'prezzo_al_kw', label: 'Prezzo/KW', })
         
-        this.tableDetailsColumns = this.$store.state.offerRows.fields
+        this.tableDetailsColumns = this.$store.state.tableDescRigaOfferta.fields
         .filter( f => !this.hiddenDetailColumns.includes(f))
         .map( f => {
           switch(f){

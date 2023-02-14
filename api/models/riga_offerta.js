@@ -27,5 +27,21 @@ class RigaOfferta extends Model {
         const result = await this.dbService.query(stmt, values)
         return result.length ? result : []
     }
+
+    async descTable () {
+        return [
+            'id',
+            'id_offerta',
+            'id_servizio',
+            'codice_fornitura',
+            'fornitura',
+            'descrizione',
+            'brand',
+            'importo_offerto',
+            'importo_contrattato',
+            'pagamento',
+            'data_arrivo_merce'
+        ]
+    }
 }
 module.exports = RigaOfferta

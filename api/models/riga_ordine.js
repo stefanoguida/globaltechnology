@@ -36,5 +36,25 @@ class RigaOrdine extends Model {
         return result.length ? result : []
     }
 
+    async descTable () {
+        return [
+            'id',
+            'id_ordine',
+            'cliente',
+            'id_progetto',
+            'progetto',
+            'importo',
+            'id_stato',
+            'stato',
+            'id_servizio',
+            'servizio',
+            'descrizione',
+            'brand',
+            'costo',
+            'costo_spedizione',
+            'data_arrivo_merce'
+        ]
+    }
+
 }
 module.exports = RigaOrdine

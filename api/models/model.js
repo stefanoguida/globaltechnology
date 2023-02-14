@@ -4,9 +4,9 @@ class Model {
         this.helper = require('../helper')
     }
 
-    async descTable ( table ) {
+    async descTable () {
         try {
-            const stmt = `desc ${table}` 
+            const stmt = `desc ${this.table}` 
             const result = await this.dbService.query(stmt)
             return result.length ? result.map(r=>r.Field) : {}
         }

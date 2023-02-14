@@ -28,6 +28,21 @@ class Contratto extends Model {
         return result.length ? result : []
     }
 
+    async descTable () {
+        return [
+            'id',
+            'id_cliente',
+            'cliente',
+            'id_progetto',
+            'progetto',
+            'luogo',
+            'impianto',
+            'kw',
+            'data_accettazione',
+            'importo_contrattato'
+        ]
+    }
+
     async getAcceptedOffers () {
         try {
             const stmt = `select count(*) as accepted_offers from ${this.table}`

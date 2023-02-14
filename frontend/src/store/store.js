@@ -358,9 +358,10 @@ const mutations = {
     },
 
     [__.DESCTABLE](state, {table, data}) {
-        table = table.charAt(0).toUpperCase() + table.toLowerCase().slice(1)
-        Vue.set(state[`tableDesc${table}` ], {})
-        Vue.set(state[`tableDesc${table}` ],'fields',data)
+        console.log(table, data)
+        table = table.split('_').reduce( (acc,curr) => (acc += curr.charAt(0).toUpperCase() + curr.toLowerCase().slice(1)), '') 
+        Vue.set(state,`tableDesc${table}`, {})
+        Vue.set(state[`tableDesc${table}`],'fields',data)
     },
 
     [__.UPLOAD](state, data) {},

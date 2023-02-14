@@ -29,6 +29,24 @@ class Milestone extends Model {
         return result 
     }
 
+    async descTable () {
+        return [
+            'id',
+            'trec',
+            'created_at',
+            'created_by',
+            'updated_at',
+            'updated_by',
+            'id_contratto',
+            'descrizione',
+            'Note',
+            'importo_percentuale',
+            'importo_valore',
+            'id_stato',
+            'stato'
+        ]
+    }
+
     async insert (data = {}) {
         try {
             if ( !this.helper.dependencies.lodash.isObject(data) ) throw new Error("Data seems not to be an Object")

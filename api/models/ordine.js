@@ -24,5 +24,16 @@ class Ordine extends Model {
         const result = await this.dbService.query(stmt, values)
         return result.length ? result : []
     }
+
+    async descTable () {
+        return [
+            'cliente',
+            'id_progetto',
+            'progetto',
+            'importo',
+            'id_stato',
+            'stato'
+        ]
+    }
 }
 module.exports = Ordine

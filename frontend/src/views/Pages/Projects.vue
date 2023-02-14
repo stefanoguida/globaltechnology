@@ -44,7 +44,7 @@
     </modal>
 
     <milestone-modal 
-      :show="milestoneModal.show" 
+      :show.sync="milestoneModal.show" 
       :editable="milestoneModal.editable"
       :tableColumns="milestoneModal.tableColumns" 
       :tableData="milestoneModal.tableData" 
@@ -235,18 +235,21 @@ export default {
     },
 
     async fetchData( ) {
-      
-      await this.$store.dispatch(__.GETALL,this.model)
-      await this.$store.dispatch(__.GETALL,'cliente')
-      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'progetto'}]})
-      await this.$store.dispatch(__.GETALL,'contratto')
-      await this.$store.dispatch(__.GETALL,'milestone')
+      await Promise.all([
+        this.$store.dispatch(__.GETALL,this.model),
+        this.$store.dispatch(__.GETALL,'cliente'),
+        this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'progetto'}]}),
+        this.$store.dispatch(__.GETALL,'contratto'),
+        this.$store.dispatch(__.GETALL,'milestone'),
+        this.$store.dispatch(__.DESCTABLE, 'progetto'),
+        this.$store.dispatch(__.DESCTABLE, 'milestone')
+      ])
 
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusSelectOptions  = this.$store.getters.statusSelectOptions
 
-      this.modal.fields = this.$store.state.projects.fields
+      this.modal.fields = this.$store.state.tableDescProgetto.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -292,7 +295,7 @@ export default {
         }
       })
 
-      this.tableColumns = this.$store.state.projects.fields
+      this.tableColumns = this.$store.state.tableDescProgetto.fields
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -363,7 +366,7 @@ export default {
 
       await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
 
-      this.milestoneModal.tableColumns = this.$store.state.milestone.fields
+      this.milestoneModal.tableColumns = this.$store.state.tableDescMilestone.fields
       .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
       .map( f => {
         switch(f){

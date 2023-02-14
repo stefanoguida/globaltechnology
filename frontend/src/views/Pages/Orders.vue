@@ -287,19 +287,21 @@ export default {
       .filter( el => Object.entries(this.filters).every( f => f[1] ? el[f[0]] == f[1] : true))
     },
     async fetchData( ) {
-      
-      await this.$store.dispatch(__.GETALL,this.model)
-      await this.$store.dispatch(__.GETALL,'progetto')
-      await this.$store.dispatch(__.GETALL,'cliente')
-      await this.$store.dispatch(__.GETALL,'servizio')
-      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'ordine'}]})
+      await Promise.all([
+        this.$store.dispatch(__.GETALL,this.model),
+        this.$store.dispatch(__.GETALL,'progetto'),
+        this.$store.dispatch(__.GETALL,'cliente'),
+        this.$store.dispatch(__.GETALL,'servizio'),
+        this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'ordine'}]}),
+        this.$store.dispatch(__.DESCTABLE, 'riga_ordine')
+      ])
 
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusOrderSelectOptions = this.$store.getters.statusSelectOptions
       this.servicesOrderSelectOptions = this.$store.getters.servicesSelectOptions
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
 
-      this.modal.fields = this.$store.state.orderRows.fields
+      this.modal.fields = this.$store.state.tableDescRigaOrdine.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -363,7 +365,7 @@ export default {
         }
       })
 
-      this.tableColumns = this.$store.state.orderRows.fields
+      this.tableColumns = this.$store.state.tableDescRigaOrdine.fields
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){

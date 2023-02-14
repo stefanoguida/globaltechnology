@@ -29,6 +29,22 @@ class Progetto extends Model {
         return result.length ? result : []
     }
 
+    async descTable () {
+        return [
+            'id',
+            'id_cliente',
+            'cliente',
+            'luogo',
+            'impianto',
+            'data_fine',
+            'id_stato',
+            'data_inizio',
+            'stato',
+            'completamento',
+            'commenti'
+        ]
+    }
+
     async getRunningProjects () {
         try {
             const stmt = `select count(*) as running_projects from progetti where id_stato = 5` // stato in lavorazione

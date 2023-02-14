@@ -137,12 +137,13 @@ export default {
     async fetchData( ) {
       
       await this.$store.dispatch(__.GETALL,this.model)
-      
-      this.modal.fields = this.$store.state.customers.fields
+      await this.$store.dispatch(__.DESCTABLE,'cliente')
+
+      this.modal.fields = this.$store.state.tableDescCliente.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => ({prop: f, label: f.replace('_',' ')}))
 
-      this.tableColumns = this.$store.state.customers.fields
+      this.tableColumns = this.$store.state.tableDescCliente.fields
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => ({prop: f, label: f.replace('_',' ')}))
       

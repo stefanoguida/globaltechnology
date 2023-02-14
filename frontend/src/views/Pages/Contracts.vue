@@ -232,18 +232,21 @@ export default {
     },
 
     async fetchData( ) {
-      
-      await this.$store.dispatch(__.GETALL,this.model)
-      await this.$store.dispatch(__.GETALL,'progetto')
-      await this.$store.dispatch(__.GETALL,'cliente')
-      await this.$store.dispatch(__.GETALL,'milestone')
-      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]}),
+      await Promise.all([
+        this.$store.dispatch(__.GETALL,this.model),
+        this.$store.dispatch(__.GETALL,'progetto'),
+        this.$store.dispatch(__.GETALL,'cliente'),
+        this.$store.dispatch(__.GETALL,'milestone'),
+        this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]}),
+        this.$store.dispatch(__.DESCTABLE, 'contratto'),
+        this.$store.dispatch(__.DESCTABLE, 'milestone'),
+      ])
 
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusOfferSelectOptions = this.$store.getters.statusSelectOptions
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
 
-      this.modal.fields = this.$store.state.contracts.fields
+      this.modal.fields = this.$store.state.tableDescContratto.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -269,7 +272,7 @@ export default {
         }
       })
 
-      this.tableColumns = [...this.$store.state.contracts.fields,'milestone']
+      this.tableColumns = [...this.$store.state.tableDescContratto.fields,'milestone']
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -341,7 +344,7 @@ export default {
       } 
       await this.$store.dispatch(__.GETWHERE, payload)
 
-      this.milestoneModal.tableColumns = (this.$store.state.milestone.fields || [])
+      this.milestoneModal.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
       .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
       .map( f => {
         switch(f){

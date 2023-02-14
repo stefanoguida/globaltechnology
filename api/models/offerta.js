@@ -34,6 +34,26 @@ class Offerta extends Model {
         return result.length ? result : []
     }
 
+    async descTable () {
+        return [
+            'id',
+            'id_cliente',
+            'cliente',
+            'id_progetto',
+            'luogo',
+            'impianto',
+            'id_tipo_impianto',
+            'tipo_impianto',
+            'data_offerta',
+            'data_accettazione',
+            'importo_offerto',
+            'importo_contrattato',
+            'kw',
+            'id_stato',
+            'stato'
+        ]
+    }
+
     async getRunningOffers () {
         try {
             const stmt = `select count(*) as running_offers from ${this.table}`

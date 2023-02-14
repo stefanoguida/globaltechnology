@@ -155,7 +155,7 @@
     },
     methods: {
       async init() {
-        await this.$store.dispatch(__.DESCTABLE, 'milestones')
+        await this.$store.dispatch(__.DESCTABLE, 'milestone')
       },
       addNewEmptyRow() {
         const emptyRow = Object.keys(this.tableData[0]).reduce( (acc,curr) => {
