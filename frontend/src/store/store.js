@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import * as __ from "./constants";
 import Services from '../services';
+import lodash from 'lodash'
 
 Vue.use(Vuex);
 
@@ -50,37 +51,37 @@ const getters = {
         return state.kpi
     },
     offers(state){
-        return state.contracts.records.filter( c => c.stato == 1)
+        return lodash.has(state,'contracts.records') ? state.contracts.records.filter( c => c.stato == 1) : []
     },
     contracts(state){
-        return state.contracts.records.filter( c => c.stato == 2)
+        return lodash.has(state, 'contracts.records') ? state.contracts.records.filter( c => c.stato == 2) : []
     },
     projects(state){
-        return state.projects.records
+        return state.projects.records || []
     },
     customers(state){
-        return state.customers.records
+        return state.customers.records || []
     },
     customerSelectOptions(state){
-        return state.customers.records.map( r => ({text: r.ragione_sociale, value: r.id}) )
+        return lodash.has(state, 'customers.records') ? state.customers.records.map( r => ({text: r.ragione_sociale, value: r.id}) ) : []
     },
     projectSelectOptions(state){
-        return state.projects.records.map( r => ({text: r.impianto, value: r.id}) )
+        return lodash.has(state, 'projects.records') ? state.projects.records.map( r => ({text: r.impianto, value: r.id}) ) : []
     },
     statusSelectOptions(state){
-        return state.status.records.map( r => ({text: r.name, value: r.id}) )
+        return lodash.has(state, 'status.records') ? state.status.records.map( r => ({text: r.name, value: r.id}) ) : []
     },
     servicesSelectOptions(state){
-        return state.services.records.map( r => ({text: r.name, value: r.id}) )
+        return lodash.has(state, 'services.records') ? state.services.records.map( r => ({text: r.name, value: r.id}) ) : []
     },
     serviceTypeSelectOptions(state){
-        return state.serviceTypes.records.map( r => ({text: r.name, value: r.code}) )
+        return lodash.has(state, 'serviceTypes.records') ? state.serviceTypes.records.map( r => ({text: r.name, value: r.code}) ) : []
     },
     projectTypeSelectOptions(state){
-        return state.projectTypes.records.map( r => ({text: r.name, value: r.id}) )
+        return lodash.has(state, 'projectTypes.records') ? state.projectTypes.records.map( r => ({text: r.name, value: r.id}) ) : []
     },
     services(state){
-        return state.services.records
+        return state.services.records || []
     }
 }
 

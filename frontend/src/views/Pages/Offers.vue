@@ -387,14 +387,14 @@ export default {
         this.servicesSelectOptions = this.$store.getters.servicesSelectOptions
         this.projectTypeSelectOptions = this.$store.getters.projectTypeSelectOptions
 
-        this.baseTableData =  this.$store.state.offers.records
+        this.baseTableData =  lodash.has(this.$store.state, 'offers.records') ? this.$store.state.offers.records : []
         .map( r => ({ 
           ...r, 
           prezzo_al_kw: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((parseFloat(r.importo_contrattato) || parseFloat(r.importo_offerto)) / parseFloat(r.kw))
         }) )
 
         this.tableData = this.baseTableData
-        this.tableDetailsData = this.$store.state.offerRows.records
+        this.tableDetailsData = lodash.has(this.$store.state, 'offerRows.records') ? this.$store.state.offerRows.records : []
         this.selectedRow = this.tableData.sort( (a,b) => a.id<b.id ? -1 : 1)[0]
 
         this.modal.fields = this.$store.state.tableDescOfferta.fields
@@ -453,10 +453,10 @@ export default {
           }
         })
 
-        const optionsServizi = this.$store.state.services.records.filter(r => r.tipo == 'servizio').map(r => lodash.pick(r,['id','name']) )
+        const optionsServizi = lodash.has(this.$store.state, 'services.records') ? this.$store.state.services.records.filter(r => r.tipo == 'servizio').map(r => lodash.pick(r,['id','name']) ) : []
         this.modal.fields.push({type: 'checkbox', prop: 'servizi', label: 'Servizi', options: optionsServizi})
 
-        const optionsForniture = this.$store.state.services.records.filter(r => r.tipo == 'fornitura').map(r => lodash.pick(r,['id','name']) )
+        const optionsForniture = lodash.has(this.$store.state, 'services.records') ? this.$store.state.services.records.filter(r => r.tipo == 'fornitura').map(r => lodash.pick(r,['id','name']) ) : []
         this.modal.fields.push({type: 'checkbox', prop: 'forniture', label: 'Forniture', options: optionsForniture })
 
         this.detailModal.fields = this.$store.state.tableDescRigaOfferta.fields
@@ -604,10 +604,10 @@ export default {
       this.modal.show = true
       this.modal.title = 'Crea nuovo contratto'
       this.modal.fields = this.modal.fields.filter( f => !['id_progetto','data_accettazione','importo_contrattato'].includes(f.prop))
-      this.modal.choosenServices = this.$store.state.services.records.reduce( (acc,curr) => {
+      this.modal.choosenServices = lodash.has(this.$store.state, 'services.records') ? this.$store.state.services.records.reduce( (acc,curr) => {
         acc[curr.id] = false
         return acc
-      }, {})
+      }, {}) : []
     },
 
     openCreateDetailModal(offerId){

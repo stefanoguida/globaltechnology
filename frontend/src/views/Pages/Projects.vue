@@ -317,7 +317,7 @@ export default {
           }
         })
       
-      this.tableData = this.$store.state.projects.records
+      this.tableData = lodash.has(this.$store.state, 'projects.records') ? this.$store.state.projects.records : []
     },
     openCreateModal(){
       this.modal.type = 'insert'
@@ -465,6 +465,7 @@ export default {
         this.modal.show = false
       }
     },
+
     handleDelete(index, row) {
       swal.fire({
         title: 'Sicuro?',
@@ -497,6 +498,7 @@ export default {
           });
       })
     },
+
     async deleteRow(row) {
       await this.$store.dispatch(__.DELETE,{model:this.model, id:row.id})
       let indexToDelete = this.tableData.findIndex(
@@ -506,6 +508,7 @@ export default {
         this.tableData.splice(indexToDelete, 1);
       }
     },
+    
     selectionChange(selectedRows) {
       this.selectedRows = selectedRows
     }

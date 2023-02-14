@@ -392,8 +392,8 @@ export default {
           }
         })
       
-      this.tableData = this.$store.state.orderRows.records
-      this.selectedRow = this.$store.state.orderRows.records[0] 
+      this.tableData = lodash.has(this.$store.state, 'orderRows.records') ? this.$store.state.orderRows.records : []
+      this.selectedRow = lodash.has(this.$store.state, 'orderRows.records') ? this.$store.state.orderRows.records[0] : []
     },
     handleRowSelect( row ){
       this.selectedRow = row
