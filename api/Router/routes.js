@@ -100,7 +100,7 @@ router.get('/getTotalKw', async (req, res, next) => {
 router.get('/getTotalInvoiced', async (req, res, next) => {
     try {
         console.log('getTotalInvoiced')
-        const Model = factory.getInstanceOf('Contratto')
+        const Model = factory.getInstanceOf('Milestone')
         const data = await Model.getTotalInvoiced()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 

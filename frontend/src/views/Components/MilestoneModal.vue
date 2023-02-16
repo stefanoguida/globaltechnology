@@ -17,7 +17,7 @@
             </div>
           </div>
           <form v-if="editable" role="form">
-            <el-table :data="tableData" row-key="id" header-row-class-name="thead-light">
+            <el-table :data="tableData" row-key="descrizione" header-row-class-name="thead-light">
               <el-table-column 
                 v-for="column in tableColumns" 
                 :key="column.label" 
@@ -157,16 +157,27 @@
       async init() {
         await this.$store.dispatch(__.DESCTABLE, 'milestone')
       },
+
       addNewEmptyRow() {
         const emptyRow = Object.keys(this.tableData[0]).reduce( (acc,curr) => {
-          acc[curr] = curr == 'id_stato' ? 10 : ''
+          switch (curr) {
+            case 'id_stato':
+              acc[curr] = 10
+              break;
+            case 'descrizione':
+              acc[curr] = 'SAL ' + (parseInt(this.tableData.length) + 1)
+              break;
+            default:
+              acc[curr] = ''
+              break;
+          }
+          // acc[curr] = curr == 'id_stato' ? 10 : ''
           return acc
         },{})
       this.tableData.push(emptyRow)
       },
 
       handleBlur(fieldName, row) {
-        console.log(fieldName, row)
         if ( fieldName === 'importo_percentuale' ) {
           const idx = row.id ? this.tableData.findIndex( t => t.id == row.id) : this.tableData.length -1 
           const val = (this.total * this.tableData[idx].importo_percentuale) / 100

@@ -206,15 +206,14 @@
                 :key="column.label" 
                 v-bind="column" 
                 :formatter="column.formatter"
-                :min-width="column.minWidth||0"
+                :min-width="column.minWidth||180"
                 label-class-name="custom-header-class"
-                width="180"
               ></el-table-column>
 
               <!-- Action Column -->
               <el-table-column align="right" label="Actions" min-width="200">
                 <div slot-scope="{$index, row}" class="d-flex">
-                  <base-button @click="handleShowPDF($index, row)"  class="edit" type="primary" size="sm" icon>PDF</base-button>
+                  <base-button @click="handleShowPDF($index, row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF {{ row.has_pdf }}</base-button>
                   <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                     <i class="text-white ni ni-ruler-pencil"></i>
                   </base-button>
@@ -387,11 +386,11 @@ export default {
         this.servicesSelectOptions = this.$store.getters.servicesSelectOptions
         this.projectTypeSelectOptions = this.$store.getters.projectTypeSelectOptions
 
-        this.baseTableData =  lodash.has(this.$store.state, 'offers.records') ? this.$store.state.offers.records : []
+        this.baseTableData =  (lodash.has(this.$store.state, 'offers.records') ? this.$store.state.offers.records : [])
         .map( r => ({ 
-          ...r, 
-          prezzo_al_kw: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((parseFloat(r.importo_contrattato) || parseFloat(r.importo_offerto)) / parseFloat(r.kw))
-        }) )
+            ...r, 
+            prezzo_al_kw: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((parseFloat(r.importo_contrattato) || parseFloat(r.importo_offerto)) / parseFloat(r.kw))
+          }) )
 
         this.tableData = this.baseTableData
         this.tableDetailsData = lodash.has(this.$store.state, 'offerRows.records') ? this.$store.state.offerRows.records : []
@@ -515,12 +514,12 @@ export default {
                 prop: f, 
                 sortable: false,
                 label: f.replace('_',' '),
-                minWidth: 40
+                minWidth: 70
               }
             case 'data_accettazione':
             case 'data_offerta':
               return {
-                formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('YYYY-MM-DD') : '',
+                formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('DD-MM-YYYY') : '',
                 prop: f, 
                 sortable: true,
                 label: f.replace('_',' ')
@@ -753,25 +752,26 @@ export default {
         this.modal = { ...this.modal, type: '', title: '', data: {} }
       }
       else {
-        await this.saveServices(method)
+        const offer_id = method == __.INSERT ? response.data.insertId : this.selectedRow.id
+        await this.saveServices(method, offer_id)
         this.$notify({type:'success', message: `Offerta salvata correttamente`})
       }
     },
 
-    async saveServices (method) {
+    async saveServices (method, offer_id) {
       if(method == __.UPDATE){
         await this.$store.dispatch(__.DELETEWHERE, {
           model: 'riga_offerta',
-          cond: [{field:'id_offerta', op:'=', value: this.selectedRow.id}]
+          cond: [{field:'id_offerta', op:'=', value: offer_id}]
         })
       }
       const servicesData = {
         model: 'riga_offerta',
         payload: Object.entries(this.modal.choosenServices).reduce( (acc, curr) => {
-          if(curr[1]) acc.push({id_offerta: this.selectedRow.id, id_servizio: curr[0]})
+          if(curr[1]) acc.push({id_offerta: offer_id, id_servizio: curr[0]})
           return acc
         }, []),
-        cond: [{field:'id_offerta', op:'=', value: this.selectedRow.id}]
+        cond: [{field:'id_offerta', op:'=', value: offer_id}]
       }
       console.log(servicesData)
       await this.$store.dispatch(__.INSERT, servicesData)
@@ -826,7 +826,7 @@ export default {
     async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
       
-      const payload = lodash.omit(this.modal.data, ['id', 'trec', 'created_at', 'created_by', 'updated_at', 'updated_by', 'prezzo_al_kw'])
+      const payload = lodash.omit(this.modal.data, ['id', 'trec', 'created_at', 'created_by', 'updated_at', 'updated_by', 'prezzo_al_kw', 'has_pdf'])
 
       if( method == __.INSERT ){
         payload.id_progetto = await this.saveProject()
@@ -835,42 +835,50 @@ export default {
       if ( payload.id_stato == 2 ) {
         payload.data_accettazione = !payload.data_accettazione ? moment().format('YYYY-MM-DD') : moment(payload.data_accettazione).format('YYYY-MM-DD')
         payload.importo_contrattato = !payload.importo_contrattato ? payload.importo_offerto : payload.importo_contrattato
-        const {isValid, importo_servizi} = this.checkTotalOffer()
-        if ( !isValid ) {
-          swal.fire({
-            title: 'Attenzione!',
-            text: `
-            La somma degli importi dei servizi non corrisponde al totale dell'offerta.
-            Nel contratto verrà inserita la somma degli importi dei contratti.
-            Continuare ?`,
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonClass: 'btn btn-success btn-fill',
-            cancelButtonClass: 'btn btn-danger btn-fill',
-            confirmButtonText: 'Si',
-            cancelButtonText: 'No',
-            buttonsStyling: false
-          })
-          .then( async result => {
-            payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
-            await this.saveOffer( method, payload )
-            await this.saveOfferRows()
-            const id_contratto = await this.saveContract( payload )
-            await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
-            await this.saveOrders(payload.id_progetto)
+        await this.saveOffer( method, payload )
+        await this.saveOfferRows()
+        const id_contratto = await this.saveContract( payload )
+        await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+        await this.saveOrders(payload.id_progetto)
 
-            this.modal.show = false
-            await this.fetchData()
-          })
-          .catch( error => console.log(error) )
-        }
-        else {
-          await this.saveOffer( method, payload )
-          const id_contratto = await this.saveContract( payload )
-          await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
-          this.modal.show = false
-          await this.fetchData()
-        }
+        this.modal.show = false
+        await this.fetchData()
+        // const {isValid, importo_servizi} = this.checkTotalOffer()
+        // if ( !isValid ) {
+        //   swal.fire({
+        //     title: 'Attenzione!',
+        //     text: `
+        //     La somma degli importi dei servizi non corrisponde al totale dell'offerta.
+        //     Nel contratto verrà inserita la somma degli importi dei contratti.
+        //     Continuare ?`,
+        //     type: 'warning',
+        //     showCancelButton: true,
+        //     confirmButtonClass: 'btn btn-success btn-fill',
+        //     cancelButtonClass: 'btn btn-danger btn-fill',
+        //     confirmButtonText: 'Si',
+        //     cancelButtonText: 'No',
+        //     buttonsStyling: false
+        //   })
+        //   .then( async result => {
+        //     payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
+        //     await this.saveOffer( method, payload )
+        //     await this.saveOfferRows()
+        //     const id_contratto = await this.saveContract( payload )
+        //     await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+        //     await this.saveOrders(payload.id_progetto)
+
+        //     this.modal.show = false
+        //     await this.fetchData()
+        //   })
+        //   .catch( error => console.log(error) )
+        // }
+        // else {
+        //   await this.saveOffer( method, payload )
+        //   const id_contratto = await this.saveContract( payload )
+        //   await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+        //   this.modal.show = false
+        //   await this.fetchData()
+        // }
       }
       else {
         await this.saveOffer( method, payload )

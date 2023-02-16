@@ -18,11 +18,14 @@ class Contratto extends Model {
         p.impianto,
         o.kw,
         o.data_accettazione,
-        o.importo_contrattato
-        FROM contratti o 
+        o.importo_contrattato, 
+        sum(if(f.path is null, 0, 1)) has_pdf
+        FROM contratti o
         JOIN progetti p ON o.id_progetto = p.id
         JOIN clienti c ON p.id_cliente = c.id
+        LEFT JOIN files f on f.id_progetto = p.id and f.tipo = 'contratto'
         where ${condition}
+        GROUP BY o.id
         `
         const result = await this.dbService.query(stmt, values)
         return result.length ? result : []
@@ -56,16 +59,6 @@ class Contratto extends Model {
     async getTotalKW () {
         try {
             const stmt = `select IFNULL(sum(kw),0) as total_kw from ${this.table}`
-            return (await this.dbService.query(stmt))[0] || 0
-        }
-        catch ( err ) {
-            console.log(err)
-            return []
-        }
-    }
-    async getTotalInvoiced () {
-        try {
-            const stmt = `select IFNULL(sum(importo_contrattato),0) as total_invoiced from ${this.table}`
             return (await this.dbService.query(stmt))[0] || 0
         }
         catch ( err ) {

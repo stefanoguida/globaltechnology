@@ -23,12 +23,15 @@ class Offerta extends Model {
         o.importo_contrattato,
         o.kw,
         o.id_stato,
-        s.name as stato
+        s.name as stato, 
+        sum(if(f.path is null, 0, 1)) has_pdf
         FROM offerte o 
         JOIN stati s on o.id_stato = s.id and s.entita = 'offerta'
         LEFT JOIN clienti c ON o.id_cliente = c.id
         LEFT JOIN tipi_progetto tp ON o.id_tipo_progetto = tp.id
+        LEFT JOIN files f on f.id_progetto = o.id_progetto and f.tipo = 'offerta'
         where ${condition}
+        group by o.id
         `
         const result = await this.dbService.query(stmt, values)
         return result.length ? result : []

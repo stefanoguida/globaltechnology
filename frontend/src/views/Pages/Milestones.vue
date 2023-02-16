@@ -262,7 +262,7 @@ export default {
 
     openCreateModal(){
       this.modal.type = 'insert'
-      this.modal.data = {data_offerta: moment().format('YYYY-MM-DD'), id_stato: 1}
+      this.modal.data = {data_offerta: moment().format('DD-MM-YYYY'), id_stato: 1}
       this.modal.show = true
       this.modal.title = 'Crea nuovo contratto'
       this.modal.fields = this.modal.fields.filter( f => !['id_progetto','data_accettazione','importo_contrattato'].includes(f.prop))

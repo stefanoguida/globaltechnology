@@ -15,7 +15,7 @@
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
         <template>
           <div class="text-muted mb-4">
-            <small>{{modal.title}}</small>
+            <small>Servizi & Forniture</small>
           </div>
           <form role="form">
             <div v-for="field in modal.fields">
@@ -47,7 +47,7 @@
       <div>
         <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
           <template slot="header">
-            <h3 class="mb-0">Clienti</h3>
+            <h3 class="mb-0">Servizi & Forniture</h3>
           </template>
           <div>
             <div class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap">
@@ -65,7 +65,14 @@
               header-row-class-name="thead-light"
             >
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class"></el-table-column>
+              <el-table-column 
+              v-for="column in tableColumns" 
+              :key="column.label" 
+              v-bind="column" 
+              :formatter="column.formatter" 
+              label-class-name="custom-header-class"
+              :min-width="column.minWidth||0"
+              ></el-table-column>
               <!-- Action Column -->
               <el-table-column align="right" label="Actions">
                 <div slot-scope="{$index, row}" class="d-flex">
@@ -123,7 +130,7 @@ export default {
     return {
       model: 'servizio',
       fields: [],
-      propsToSearch: ['ragione_sociale', 'piva'],
+      propsToSearch: ['name', 'tipo'],
       tableHiddenFields: ['trec','created_at','created_by','updated_at','updated_by'],
       tableColumns: [],
       tableData: [],
@@ -178,9 +185,30 @@ export default {
 
       this.tableColumns = this.$store.state.services.fields
       .filter( f => !this.tableHiddenFields.includes(f))
-      .map( f => ({prop: f, label: f.replace('_',' ')}))
+      .map( f => {
+        switch (f) {
+          case 'id':
+            return  {
+              prop: f, 
+              label: f.replace('_',' '),
+              minWidth: 20
+            }
+          case 'name':
+            return  {
+              prop: f, 
+              label: f.replace('_',' '),
+              minWidth: 200
+            }
+        
+          default:
+            return {
+              prop: f, 
+              label: f.replace('_',' ')
+            }
+            break;
+        }
+      })
       
-      this.tableColumns.unshift({type: 'selection'})
       this.tableData = this.$store.state.services.records
     },
     openCreateModal(){

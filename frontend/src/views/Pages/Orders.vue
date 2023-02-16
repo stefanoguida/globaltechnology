@@ -151,7 +151,14 @@
 
               <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" highlight-current-row @sort-change="sortChange" @current-change="handleRowSelect">
                 <!-- All columns -->
-                <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class" width="180"></el-table-column>
+                <el-table-column 
+                v-for="column in tableColumns" 
+                :key="column.label" 
+                v-bind="column" 
+                :formatter="column.formatter" 
+                label-class-name="custom-header-class" 
+                :min-width="column.minWidth||180"
+                ></el-table-column>
 
                 <!-- Action Column -->
                 <el-table-column align="right" label="Actions" min-width="200">
@@ -369,6 +376,14 @@ export default {
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
+          case 'id':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              sortable: true,
+              label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
+              minWidth: 100
+            }
           case 'importo':
             return {
               formatter: (row, column) => new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(row[column.property]),
@@ -378,7 +393,7 @@ export default {
             }
           case 'data_arrivo_merce':
             return {
-              formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('YYYY-MM-DD') : '',
+              formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('DD-MM-YYYY') : '',
               prop: f, 
               label: f.replace('_',' ')
             }

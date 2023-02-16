@@ -92,7 +92,14 @@
 
             <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light" @sort-change="sortChange" >
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class">
+              <el-table-column 
+              v-for="column in tableColumns" 
+              :key="column.label" 
+              v-bind="column" 
+              :formatter="column.formatter" 
+              label-class-name="custom-header-class"
+              :min-width="column.minWidth"
+              >
                 <template v-slot="{row}" v-if="column.prop == 'completamento'">
                   <div class="align-items-center">
                     <span class="mr-2">{{row.completamento}}%</span>
@@ -302,10 +309,18 @@ export default {
           case 'data_inizio':
           case 'data_fine':
             return {
-              formatter: (row, column) => moment(row[column.property]).format('YYYY-MM-DD'),
+              formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
               prop: f, 
               sortable: true,
               label: f.replace('_',' ')
+            }
+          case 'id':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              sortable: true,
+              label: f.replace('_',' '),
+              minWidth: 50
             }
           default: 
             return {
@@ -332,7 +347,7 @@ export default {
         switch(c[0]){
           case "data_inizio":
           case "data_fine":
-            a[c[0]] =  moment(c[1]).format('YYYY-MM-DD')
+            a[c[0]] =  moment(c[1]).format('DD-MM-YYYY')
             break
           case "cliente":
             a[c[0]] = (this.customerSelectOptions.filter( r => r.text == c[1]).pop()).value

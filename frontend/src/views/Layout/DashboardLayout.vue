@@ -9,8 +9,11 @@
         <sidebar-item :link="{ name: 'Offerte', path: '/offers', icon: 'ni ni-single-copy-04 text-primary' }" ></sidebar-item>
         <sidebar-item :link="{ name: 'Contratti', path: '/contracts', icon: 'fa fa-file-contract text-primary' }" ></sidebar-item>
         <!-- <sidebar-item :link="{ name: 'Milestones', path: '/milestones', icon: 'ni ni-atom text-primary' }" ></sidebar-item> -->
-        <sidebar-item :link="{ name: 'Orders', path: '/orders', icon: 'ni ni-cart text-primary' }" ></sidebar-item>
-        <sidebar-item :link="{ name: 'Servizi', path: '/services', icon: 'ni ni-books text-primary' }" ></sidebar-item>
+        <sidebar-item :link="{ name: 'Ordini', path: '/orders', icon: 'ni ni-cart text-primary' }" ></sidebar-item>
+        <sidebar-item :link="{ name: 'Anagrafiche', icon: 'fa fa-table text-primary'}">
+          <sidebar-item :link="{ name: 'Servizi & Forniture', path: '/services', icon: 'ni ni-books text-primary' }" ></sidebar-item>
+          <sidebar-item :link="{ name: 'Tipi Progetto', path: '/project-types', icon: 'ni ni-books text-primary' }" ></sidebar-item>
+        </sidebar-item>
       </template>
     </side-bar>
     <div class="main-content">

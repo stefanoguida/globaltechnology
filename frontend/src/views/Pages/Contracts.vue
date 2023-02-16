@@ -89,15 +89,22 @@
 
             <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light">
               <!-- All columns -->
-              <el-table-column v-for="column in tableColumns" :key="column.label" v-bind="column" :formatter="column.formatter" label-class-name="custom-header-class">
+              <el-table-column 
+              v-for="column in tableColumns" 
+              :key="column.label" 
+              v-bind="column" 
+              :formatter="column.formatter" 
+              label-class-name="custom-header-class"
+              :min-width="column.minWidth"
+              >
                 <template #default="scope" v-if="column.prop == 'milestone'">
                   <el-tag v-if="scope.row.milestone" disable-transitions :type="scope.row.tagClass" >{{ scope.row.milestone }}</el-tag>
                 </template>
               </el-table-column>
               <!-- Action Column -->
-              <el-table-column align="right" label="Actions" >
+              <el-table-column align="right" label="Actions" min-width="100">
                 <template #default="{$index, row}" class="d-flex">
-                  <base-button @click.native="handleShowPDF(row)"  class="edit" type="primary" size="sm" icon>PDF</base-button>
+                  <base-button @click.native="handleShowPDF(row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF {{ row.has_pdf }}</base-button>
                   <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
                     <i class="ni ni-atom"></i>
                   </base-button>
@@ -276,9 +283,17 @@ export default {
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
+          case 'id':
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              sortable: true,
+              label: f.replace('_',' '),
+              minWidth: 50
+            }
           case 'data_accettazione':
             return {
-              formatter: (row, column) => moment(row[column.property]).format('YYYY-MM-DD'),
+              formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
               prop: f, 
               sortable: true,
               label: f.replace('_',' ')
@@ -314,7 +329,7 @@ export default {
 
         if ( daFatturare.length ) {
           tagClass = 'danger'
-          milestoneToShow = (daFatturare.slice(-1).pop()).descrizione
+          milestoneToShow = (daFatturare[0]).descrizione
         }
         else if (fatturato.length ) {
           tagClass = 'warning'
@@ -345,7 +360,7 @@ export default {
       await this.$store.dispatch(__.GETWHERE, payload)
 
       this.milestoneModal.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
-      .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
+      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
       .map( f => {
         switch(f){
           case 'id':
@@ -362,7 +377,8 @@ export default {
               formatter: (row, column) => row[column.property],
               prop: f, 
               label: f.replace('_',' '),
-              type: 'textarea'
+              type: 'input',
+              disabled: true
             }
           case 'Note':
             return {
@@ -423,7 +439,7 @@ export default {
       this.modal.data = Object.entries(row).reduce( (a,c) => {
         switch(c[0]){
           case "data_accettazione":
-            a[c[0]] =  moment(c[1]).format('YYYY-MM-DD')
+            a[c[0]] =  moment(c[1]).format('DD-MM-YYYY')
             break
           case "progetto":
             a[c[0]] = (this.projectSelectOptions.filter( r => r.text == c[1]).pop()).value

@@ -66,6 +66,16 @@ class Milestone extends Model {
             }
         }
     }
+    async getTotalInvoiced () {
+        try {
+            const stmt = `select IFNULL(sum(importo_valore),0) as total_invoiced from ${this.table} where id_stato in (11,12) and YEAR(created_at) == YEAR(now())`
+            return (await this.dbService.query(stmt))[0] || 0
+        }
+        catch ( err ) {
+            console.log(err)
+            return []
+        }
+    }
 
 }
 module.exports = Milestone
