@@ -216,7 +216,8 @@ export default {
         total: 0
       },
       customerSelectOptions: [],
-      statusSelectOptions: []
+      statusSelectOptions: [],
+      projectSelectOptions: []
     };
   },
   created() {
@@ -309,7 +310,7 @@ export default {
           case 'data_inizio':
           case 'data_fine':
             return {
-              formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
+              formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('DD-MM-YYYY') : '',
               prop: f, 
               sortable: true,
               label: f.replace('_',' ')
@@ -334,12 +335,14 @@ export default {
       
       this.tableData = lodash.has(this.$store.state, 'projects.records') ? this.$store.state.projects.records : []
     },
+    
     openCreateModal(){
       this.modal.type = 'insert'
       this.modal.data = {}
       this.modal.show = true
       this.modal.title = 'Crea nuovo progetto'
     },
+
     openUpdateModal(index, row){
       console.log('openUpdateModal', row)
       this.modal.type = 'update'
@@ -347,7 +350,7 @@ export default {
         switch(c[0]){
           case "data_inizio":
           case "data_fine":
-            a[c[0]] =  moment(c[1]).format('DD-MM-YYYY')
+            a[c[0]] =  moment(c[1]||undefined).format('YYYY-MM-DD')
             break
           case "cliente":
             a[c[0]] = (this.customerSelectOptions.filter( r => r.text == c[1]).pop()).value
@@ -382,7 +385,7 @@ export default {
       await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
 
       this.milestoneModal.tableColumns = this.$store.state.tableDescMilestone.fields
-      .filter( f => !['trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
+      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
       .map( f => {
         switch(f){
           case 'id':
@@ -399,7 +402,8 @@ export default {
               formatter: (row, column) => row[column.property],
               prop: f, 
               label: f.replace('_',' '),
-              type: 'textarea'
+              type: 'input',
+              disabled: true
             }
           case 'Note':
             return {

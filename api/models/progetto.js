@@ -45,18 +45,6 @@ class Progetto extends Model {
         ]
     }
 
-    async getRunningProjects () {
-        try {
-            const stmt = `select count(*) as running_projects from progetti where id_stato = 5` // stato in lavorazione
-            return (await this.dbService.query(stmt))[0] || 0
-        }
-        catch ( err ) {
-            console.log(err)
-            return []
-        }
-    }
-
-
     async getProjectsProgress () {
         try {
             const stmt = `

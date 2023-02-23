@@ -95,7 +95,6 @@
     data() {
       return {
         kwPerMonth: {
-          activeIndex: 0,
           chartData: {
             datasets: [{ label: 'Kw', data: [] }],
             labels: [],
@@ -133,26 +132,17 @@
     },
     methods: {
       async init() {
-        await Promise.all([
-          this.$store.dispatch(__.GET_RUNNING_OFFERS),
-          this.$store.dispatch(__.GET_ACCEPTED_OFFERS),
-          this.$store.dispatch(__.GET_RUNNING_PROJECTS),
-          this.$store.dispatch(__.GET_TOTAL_KW),
-          this.$store.dispatch(__.GET_TOTAL_INVOICED),
-          this.$store.dispatch(__.GET_CONTRACTS_PER_MONTH),
-          this.$store.dispatch(__.GET_KW_PER_MONTH)
-        ])
-
-        this.kwPerMonth.chartData = this.$store.state.kw_per_month.data.reduce( (acc,curr) => {
-          acc.datasets[0].data.push(curr.kw)
-          acc.labels.push(moment(curr.data_accettazione).format('MMM'))
-          return acc
-        } ,this.kwPerMonth.chartData);
-        
+        await this.$store.dispatch(__.GET_KW_PER_MONTH)
       }
     },
     async mounted() {
       await this.init()
+      this.kwPerMonth.chartData = this.$store.state.kw_per_month.data.reduce( (acc,curr) => {
+        acc.datasets[0].data.push(parseFloat(curr.kw))
+        acc.labels.push(moment(curr.data_accettazione).locale('it').format('MMM'))
+        return acc
+      } ,this.kwPerMonth.chartData);
+      console.log(this.kwPerMonth.chartData)
     }
   };
 </script>

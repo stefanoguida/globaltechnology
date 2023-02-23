@@ -234,7 +234,7 @@ const actions = {
 
     async [__.GET_RUNNING_OFFERS]({commit}) {
         try {
-            const response = await baseService.getRunnigOffers()
+            const response = await baseService.getRunningOffers()
             commit(__.GET_RUNNING_OFFERS,response)
             return response
         }

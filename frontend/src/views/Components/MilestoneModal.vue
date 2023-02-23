@@ -7,8 +7,15 @@
             <small>{{title}}</small>
           </div>
           <div class="row">
-            <div class="col-11 text-right">
+            <div class="col-5 text-right">
               <span v-if="percentageLeft < 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
+            </div>
+            <div class="col-2 text-right">
+              <base-input type="number" step="5" min="0" max="100" label="Ritenuta %" v-model="ritenuta_su_milestones"></base-input>
+            </div>
+            <div class="col-4 text-right">
+              <span>Importo contratto: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(total) }}</span><br />
+              <span>Importo totale SAL: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleSal) }}</span>
             </div>
             <div class="col-1 text-right">
               <base-button @click.native="addNewEmptyRow()" :disabled="percentageLeft<0" class="edit" type="primary" size="sm" icon >
@@ -47,25 +54,6 @@
               </el-table-column>
             </el-table>
           </form>
-          
-          <!-- <el-table v-if="!editable" :data="tableData" row-key="id" header-row-class-name="thead-light">
-            <el-table-column 
-              v-for="column in tableColumns" 
-              :key="column.label" 
-              v-bind="column" 
-              :formatter="column.formatter" 
-              :min-width="column.minWidth||0"
-            >
-            </el-table-column>
-            <el-table-column align="right" label="Actions" :min-width="50">
-              <div slot-scope="{row}" class="d-flex">
-                <base-button @click.native="handleDelete(row)" class="remove btn-link" type="danger" size="sm" icon>
-                  <i class="text-white fa fa-trash"></i>
-                </base-button>
-              </div>
-            </el-table-column>
-          </el-table> -->
-
           <div class="text-right">
             <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>
             <base-button type="primary" class="my-4" @click="handleSave()">Salva</base-button>
@@ -131,6 +119,9 @@
       }
     },
     computed: {
+      totaleSal(){
+        return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.importo_valore || 0) ), 0)
+      },
       percentageLeft(){
         const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.importo_percentuale || 0) ), 0)
         return 100 - tot_percentage 
@@ -150,7 +141,8 @@
     },
     data(){
       return {
-        dataFields: []
+        dataFields: [],
+        ritenuta_su_milestones: 0
       }
     },
     methods: {
@@ -215,12 +207,13 @@
           return 
         }
 
-        const paidMilestones = this.tableData.reduce( (acc, curr) => (acc += curr.id_stato == 12 ? 1 : 0), 0) // id_stato: 12 -> PAGATO
+        const paidMilestones = this.tableData.reduce( (acc, curr) => (acc += [11,12].includes(curr.id_stato) ? curr.importo_percentuale : 0), 0) // id_stato: 12 -> PAGATO
         const totMilestones = this.tableData.length
-        const completamentoProgetto = parseInt(((paidMilestones / totMilestones) * 100))
+        const completamentoProgetto = paidMilestones//parseInt(((paidMilestones / totMilestones) * 100))
         const projectId = (this.$store.state.contracts.records.filter( c => c.id == this.id_contratto).pop()).id_progetto
 
         await this.$store.dispatch(__.UPDATE,{model:'progetto', cond:[{field:'id', op:'=', value:projectId}], payload: {completamento: completamentoProgetto}})
+        await this.$store.dispatch(__.UPDATE,{model:'contratto', cond:[{field:'id', op:'=', value:this.id_contratto}], payload: {ritenuta_su_milestones: this.ritenuta_su_milestones}})
 
         this.$emit("after-save")
       },

@@ -57,15 +57,5 @@ class Offerta extends Model {
         ]
     }
 
-    async getRunningOffers () {
-        try {
-            const stmt = `select count(*) as running_offers from ${this.table}`
-            return (await this.dbService.query(stmt))[0] || 0
-        }
-        catch ( err ) {
-            console.log(err)
-            return []
-        }
-    }
 }
 module.exports = Offerta

@@ -104,7 +104,7 @@
               <!-- Action Column -->
               <el-table-column align="right" label="Actions" min-width="100">
                 <template #default="{$index, row}" class="d-flex">
-                  <base-button @click.native="handleShowPDF(row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF {{ row.has_pdf }}</base-button>
+                  <base-button @click.native="handleShowPDF(row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF</base-button>
                   <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
                     <i class="ni ni-atom"></i>
                   </base-button>

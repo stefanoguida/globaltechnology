@@ -213,7 +213,7 @@
               <!-- Action Column -->
               <el-table-column align="right" label="Actions" min-width="200">
                 <div slot-scope="{$index, row}" class="d-flex">
-                  <base-button @click="handleShowPDF($index, row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF {{ row.has_pdf }}</base-button>
+                  <base-button @click="handleShowPDF($index, row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF</base-button>
                   <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                     <i class="text-white ni ni-ruler-pencil"></i>
                   </base-button>
@@ -843,42 +843,6 @@ export default {
 
         this.modal.show = false
         await this.fetchData()
-        // const {isValid, importo_servizi} = this.checkTotalOffer()
-        // if ( !isValid ) {
-        //   swal.fire({
-        //     title: 'Attenzione!',
-        //     text: `
-        //     La somma degli importi dei servizi non corrisponde al totale dell'offerta.
-        //     Nel contratto verrà inserita la somma degli importi dei contratti.
-        //     Continuare ?`,
-        //     type: 'warning',
-        //     showCancelButton: true,
-        //     confirmButtonClass: 'btn btn-success btn-fill',
-        //     cancelButtonClass: 'btn btn-danger btn-fill',
-        //     confirmButtonText: 'Si',
-        //     cancelButtonText: 'No',
-        //     buttonsStyling: false
-        //   })
-        //   .then( async result => {
-        //     payload.importo_contrattato = result.isConfirmed ? importo_servizi : payload.importo_contrattato
-        //     await this.saveOffer( method, payload )
-        //     await this.saveOfferRows()
-        //     const id_contratto = await this.saveContract( payload )
-        //     await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
-        //     await this.saveOrders(payload.id_progetto)
-
-        //     this.modal.show = false
-        //     await this.fetchData()
-        //   })
-        //   .catch( error => console.log(error) )
-        // }
-        // else {
-        //   await this.saveOffer( method, payload )
-        //   const id_contratto = await this.saveContract( payload )
-        //   await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
-        //   this.modal.show = false
-        //   await this.fetchData()
-        // }
       }
       else {
         await this.saveOffer( method, payload )

@@ -27,7 +27,7 @@ const upload = multer({storage: storage})
 
 router.get('/getContractsPerMonth', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Contratto')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getContractsPerMonth()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
@@ -39,7 +39,7 @@ router.get('/getContractsPerMonth', async (req, res, next) => {
 
 router.get('/getKwPerMonth', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Contratto')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getKwPerMonth()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
@@ -49,9 +49,9 @@ router.get('/getKwPerMonth', async (req, res, next) => {
     }
 })
 
-router.get('/getRunnigOffers', async (req, res, next) => {
+router.get('/getRunningOffers', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Offerta')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getRunningOffers()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
@@ -63,7 +63,7 @@ router.get('/getRunnigOffers', async (req, res, next) => {
 
 router.get('/getAcceptedOffers', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Contratto')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getAcceptedOffers()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
@@ -75,7 +75,7 @@ router.get('/getAcceptedOffers', async (req, res, next) => {
 
 router.get('/getRunningProjects', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Progetto')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getRunningProjects()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
@@ -87,7 +87,7 @@ router.get('/getRunningProjects', async (req, res, next) => {
 
 router.get('/getTotalKw', async (req, res, next) => {
     try {
-        const Model = factory.getInstanceOf('Contratto')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getTotalKW()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
@@ -100,7 +100,7 @@ router.get('/getTotalKw', async (req, res, next) => {
 router.get('/getTotalInvoiced', async (req, res, next) => {
     try {
         console.log('getTotalInvoiced')
-        const Model = factory.getInstanceOf('Milestone')
+        const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getTotalInvoiced()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 

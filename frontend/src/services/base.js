@@ -98,10 +98,10 @@ export default class BaseService {
     }
   }
 
-  async getRunnigOffers() {
+  async getRunningOffers() {
     try {
       this.setHeaders()   
-      const response = await this.axios.get(`${this.SERVICE_URL}getRunnigOffers`, {headers: this.headers})
+      const response = await this.axios.get(`${this.SERVICE_URL}getRunningOffers`, {headers: this.headers})
       return response.data.data.running_offers || 0
     }
     catch( error ) {

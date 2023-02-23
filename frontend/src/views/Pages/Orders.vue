@@ -120,7 +120,7 @@
                     </el-form-item>
   
                     <el-form-item>
-                      <el-select placeholder="Progetto" v-model="filters.id_progettot" filterable>
+                      <el-select placeholder="Progetto" v-model="filters.id_progetto" filterable>
                         <el-option value=""></el-option>
                         <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
                       </el-select>
@@ -294,121 +294,126 @@ export default {
       .filter( el => Object.entries(this.filters).every( f => f[1] ? el[f[0]] == f[1] : true))
     },
     async fetchData( ) {
-      await Promise.all([
-        this.$store.dispatch(__.GETALL,this.model),
-        this.$store.dispatch(__.GETALL,'progetto'),
-        this.$store.dispatch(__.GETALL,'cliente'),
-        this.$store.dispatch(__.GETALL,'servizio'),
-        this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'ordine'}]}),
-        this.$store.dispatch(__.DESCTABLE, 'riga_ordine')
-      ])
+      try {
 
-      this.projectSelectOptions = this.$store.getters.projectSelectOptions
-      this.statusOrderSelectOptions = this.$store.getters.statusSelectOptions
-      this.servicesOrderSelectOptions = this.$store.getters.servicesSelectOptions
-      this.customerSelectOptions = this.$store.getters.customerSelectOptions
-
-      this.modal.fields = this.$store.state.tableDescRigaOrdine.fields
-      .filter( f => !this.modal.hiddenColumns.includes(f))
-      .map( f => {
-        switch(f){
-          case 'data_arrivo_merce':
-            return {
-              type: 'date',
-              prop: f, 
-              label: f.replace('_',' ')
-            }
-          case 'progetto':
-            return {
-              type: 'select',
-              prop: 'id_progetto', 
-              label: f.replace('_',' '),
-              options: this.projectSelectOptions
-            }
-          case 'stato':
-            return {
-              type: 'select',
-              prop: 'id_stato', 
-              label: f.replace('_',' '),
-              options: this.statusOrderSelectOptions
-            }
-          case 'servizio':
-            return {
-              type: 'select',
-              prop: 'id_servizio', 
-              label: f.replace('_',' '),
-              options: this.servicesOrderSelectOptions
-            }
-          case 'importo':
-            return {
-              type: 'currency',
-              prop: f, 
-              label: f.replace('_',' ')
-            }
-          case 'costo':
-            return {
-              type: 'currency',
-              prop: f, 
-              label: f.replace('_',' ')
-            }
-          case 'costo_spedizione':
-            return {
-              type: 'currency',
-              prop: f, 
-              label: f.replace('_',' ')
-            }
-          case 'descrizione':
-            return {
-              type: 'textarea',
-              prop: f, 
-              label: f.replace('_',' ')
-            }
-          default: 
-            return {
-              type: 'input',
-              prop: f, 
-              label: f.replace('_',' '),
-            }
-        }
-      })
-
-      this.tableColumns = this.$store.state.tableDescRigaOrdine.fields
-      .filter( f => !this.hiddenColumns.includes(f))
-      .map( f => {
-        switch(f){
-          case 'id':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              sortable: true,
-              label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
-              minWidth: 100
-            }
-          case 'importo':
-            return {
-              formatter: (row, column) => new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(row[column.property]),
-              prop: f, 
-              sortable: true,
-              label: f.replace('_',' ')
-            }
-          case 'data_arrivo_merce':
-            return {
-              formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('DD-MM-YYYY') : '',
-              prop: f, 
-              label: f.replace('_',' ')
-            }
-          default: 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              sortable: true,
-              label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
-            }
+        await Promise.all([
+          this.$store.dispatch(__.GETALL,this.model),
+          this.$store.dispatch(__.GETALL,'progetto'),
+          this.$store.dispatch(__.GETALL,'cliente'),
+          this.$store.dispatch(__.GETALL,'servizio'),
+          this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'ordine'}]}),
+          this.$store.dispatch(__.DESCTABLE, 'riga_ordine')
+        ])
+        this.projectSelectOptions = this.$store.getters.projectSelectOptions
+        this.statusOrderSelectOptions = this.$store.getters.statusSelectOptions
+        this.servicesOrderSelectOptions = this.$store.getters.servicesSelectOptions
+        this.customerSelectOptions = this.$store.getters.customerSelectOptions
+        
+        this.modal.fields = this.$store.state.tableDescRigaOrdine.fields
+        .filter( f => !this.modal.hiddenColumns.includes(f))
+        .map( f => {
+          switch(f){
+            case 'data_arrivo_merce':
+              return {
+                type: 'date',
+                prop: f, 
+                label: f.replace('_',' ')
+              }
+            case 'progetto':
+              return {
+                type: 'select',
+                prop: 'id_progetto', 
+                label: f.replace('_',' '),
+                options: this.projectSelectOptions
+              }
+            case 'stato':
+              return {
+                type: 'select',
+                prop: 'id_stato', 
+                label: f.replace('_',' '),
+                options: this.statusOrderSelectOptions
+              }
+            case 'servizio':
+              return {
+                type: 'select',
+                prop: 'id_servizio', 
+                label: f.replace('_',' '),
+                options: this.servicesOrderSelectOptions
+              }
+            case 'importo':
+              return {
+                type: 'currency',
+                prop: f, 
+                label: f.replace('_',' ')
+              }
+            case 'costo':
+              return {
+                type: 'currency',
+                prop: f, 
+                label: f.replace('_',' ')
+              }
+            case 'costo_spedizione':
+              return {
+                type: 'currency',
+                prop: f, 
+                label: f.replace('_',' ')
+              }
+            case 'descrizione':
+              return {
+                type: 'textarea',
+                prop: f, 
+                label: f.replace('_',' ')
+              }
+            default: 
+              return {
+                type: 'input',
+                prop: f, 
+                label: f.replace('_',' '),
+              }
           }
         })
-      
-      this.tableData = lodash.has(this.$store.state, 'orderRows.records') ? this.$store.state.orderRows.records : []
-      this.selectedRow = lodash.has(this.$store.state, 'orderRows.records') ? this.$store.state.orderRows.records[0] : []
+        
+        this.tableColumns = this.$store.state.tableDescRigaOrdine.fields
+        .filter( f => !this.hiddenColumns.includes(f))
+        .map( f => {
+          switch(f){
+            case 'id':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
+                minWidth: 100
+              }
+            case 'importo':
+              return {
+                formatter: (row, column) => new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(row[column.property]),
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' ')
+              }
+            case 'data_arrivo_merce':
+              return {
+                formatter: (row, column) => row[column.property] ? moment(row[column.property]).format('DD-MM-YYYY') : '',
+                prop: f, 
+                label: f.replace('_',' ')
+              }
+            default: 
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
+              }
+            }
+        })
+        
+        this.tableData = lodash.has(this.$store.state, 'orderRows.records') ? this.$store.state.orderRows.records : []
+        this.selectedRow = lodash.has(this.$store.state, 'orderRows.records') ? this.$store.state.orderRows.records[0] : []
+      }
+      catch( err ) {
+        console.log(err)
+      }
     },
     handleRowSelect( row ){
       this.selectedRow = row
@@ -474,7 +479,7 @@ export default {
         }
         console.log(details, response)
         response = await this.$store.dispatch(method, details)
-        
+
         if ( response.error ) {
           this.$notify({type:'danger', message:response.message})
           this.modal = { ...this.modal, type: '', title: '', data: {} }
