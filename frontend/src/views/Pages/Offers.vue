@@ -12,7 +12,7 @@
     </dashboard-header>
 
     <!-- Create modal-->
-    <modal :show.sync="modal.show" size="lg" body-classes="p-0">
+    <modal :show.sync="modal.show" @close="handleCloseModal" size="lg" body-classes="p-0">
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
         <template>
           <div class="text-muted mb-4">
@@ -112,6 +112,24 @@
       </card>
     </modal>
 
+    <modal :show.sync="preventCloseModal.show" type="notice">
+      <template slot="header"> 
+        <h2 id="modal-title-notification" class="modal-title">Attenzione</h2>
+      </template>
+      <template>
+        <div class="py-3 text-center">
+          <h4 class="heading mt-4">Stai per chiudere la finestra.</h4>
+          <p>Continuare?</p>
+        </div>
+      </template>
+      <template slot="footer"> 
+        <div class="text-right">
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = modal.show = false">Si</base-button>
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = false">No</base-button>
+        </div>
+      </template>
+    </modal>
+    
     <!-- HEAD -->
     <div class="container-fluid mt--6">
         <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
@@ -306,6 +324,9 @@ export default {
         title: '',
         data: {},
         choosenServices:[]
+      },
+      preventCloseModal: {
+        show: false
       },
       detailModal: {
         fields:[],
@@ -578,6 +599,11 @@ export default {
       catch ( err ) {
         console.log(err)
       } 
+    },
+    
+    async handleCloseModal(){
+      this.preventCloseModal.show = true
+      this.modal.show = true
     },
 
     handleRowSelect( row ){

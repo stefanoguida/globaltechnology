@@ -16,8 +16,7 @@
             <line-chart
               :height="350"
               ref="bigChart"
-              :chart-data="kwPerMonth.chartData"
-              :extra-options="kwPerMonth.extraOptions" 
+              :chart-data="kwPerMonthChartData"
             >
             </line-chart>
           </card>
@@ -72,6 +71,7 @@
   import DashboardHeader from './DashboardHeader.vue';
   import * as __ from '../../store/constants'
   import moment from 'moment'
+  import lodash from 'lodash'
 
   export default {
     components: {
@@ -94,27 +94,31 @@
     },
     data() {
       return {
-        kwPerMonth: {
-          chartData: {
-            datasets: [{ label: 'Kw', data: [] }],
-            labels: [],
-          },
-          extraOptions: chartConfigs.basicOptions,
-        },
+        kwPerMonthChartData : null,
 
-        contractsPerMonth: {
-          activeIndex: 0,
-          chartData: {
-            datasets: [
-              {
-                label: 'Contratti',
-                data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
-              }
-            ],
-            labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-          },
-          extraOptions: chartConfigs.basicOptions,
-        }
+        // kwPerMonth: {
+        //   chartData: {
+        //     datasets: [
+        //       { label: '2022', data: [10,60,30,60], backgroundColor: '#f87979' }
+        //     ],
+        //     labels: ['gen','feb','mar','apr'],
+        //   },
+        //   extraOptions:{...chartConfigs.basicOptions},
+        // },
+
+        // contractsPerMonth: {
+        //   activeIndex: 0,
+        //   chartData: {
+        //     datasets: [
+        //       {
+        //         label: 'Contratti',
+        //         data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
+        //       }
+        //     ],
+        //     labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        //   },
+        //   extraOptions: chartConfigs.basicOptions,
+        // }
       };
     },
     computed: {
@@ -137,12 +141,15 @@
     },
     async mounted() {
       await this.init()
-      this.kwPerMonth.chartData = this.$store.state.kw_per_month.data.reduce( (acc,curr) => {
+      this.kwPerMonthChartData = this.$store.state.kw_per_month.data.reduce( (acc,curr) => {
+        if( !lodash.has(acc,'datasets') )
+          lodash.set(acc,datasets[0].data,[])
+          
         acc.datasets[0].data.push(parseFloat(curr.kw))
         acc.labels.push(moment(curr.data_accettazione).locale('it').format('MMM'))
         return acc
-      } ,this.kwPerMonth.chartData);
-      console.log(this.kwPerMonth.chartData)
+      } ,[]);
+      console.log(this.kwPerMonthChartData)
     }
   };
 </script>

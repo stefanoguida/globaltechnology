@@ -88,6 +88,18 @@
             </div>
 
             <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light">
+              
+              <el-table-column type="expand" >
+                <template #default="scope">
+                  <span class="m-2" v-for="m in allMilestones.filter( m => m.id_contratto == scope.row.id)">
+                    <el-tag v-if="m.id_stato == 10" type="danger"> {{ m.descrizione }}</el-tag>
+                    <el-tag v-else-if="m.id_stato == 11" type="warning"> {{ m.descrizione }}</el-tag>
+                    <el-tag v-else-if="m.id_stato == 12" type="success"> {{ m.descrizione }}</el-tag>
+                    <el-tag v-else type="primary"> {{ m.descrizione }}</el-tag>
+                  </span>
+                </template>
+              </el-table-column>
+
               <!-- All columns -->
               <el-table-column 
               v-for="column in tableColumns" 
@@ -213,7 +225,8 @@ export default {
       },
       projectSelectOptions: [],
       statusOfferSelectOptions: [],
-      customerSelectOptions: []
+      customerSelectOptions: [],
+      paymentMethodSelectOptions: []
     };
   },
   created() {
@@ -235,7 +248,7 @@ export default {
           return f[1] ? el[f[0]] == f[1] : true
         } ))
       }
-      this.tableData = filteredOffers.length ? filteredOffers : this.baseTableData
+      this.tableData = hasFilterHead ? filteredOffers : this.baseTableData
     },
 
     async fetchData( ) {
@@ -247,11 +260,15 @@ export default {
         this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]}),
         this.$store.dispatch(__.DESCTABLE, 'contratto'),
         this.$store.dispatch(__.DESCTABLE, 'milestone'),
+        this.$store.dispatch(__.GETALL, 'metodo_pagamento'),
       ])
 
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusOfferSelectOptions = this.$store.getters.statusSelectOptions
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
+      this.paymentMethodSelectOptions = this.$store.getters.paymentMethodSelectOptions
+      
+      this.allMilestones = this.$store.state.milestone.records
 
       this.modal.fields = this.$store.state.tableDescContratto.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
@@ -298,7 +315,7 @@ export default {
               sortable: true,
               label: f.replace('_',' ')
             }
-          case 'importo':
+          case 'importo_contrattato':
             return {
               formatter: (row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property]),
               prop: f, 
@@ -360,7 +377,7 @@ export default {
       await this.$store.dispatch(__.GETWHERE, payload)
 
       this.milestoneModal.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
-      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
+      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','data_fatturazione','impianto'].includes(f))
       .map( f => {
         switch(f){
           case 'id':
@@ -395,6 +412,14 @@ export default {
               label: f.replace('_',' '),
               type: 'select',
               options: this.statusOfferSelectOptions
+            }
+          case 'tipo_pagamento': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: 'id_payment_method', 
+              label: f.replace('_',' '),
+              type: 'select',
+              options: this.paymentMethodSelectOptions
             }
           case 'importo_percentuale': 
             return {
@@ -568,5 +593,10 @@ export default {
   }
   .cell.custom-header-class {
     word-break: break-word;
+  }
+  .el-table__expand-icon{
+    position: absolute;
+    left: 23px;
+    top: 20px;
   }
 </style>

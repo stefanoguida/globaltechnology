@@ -22,6 +22,7 @@ const modelMapping = {
     tipo_progetto: "projectTypes",
     tipo_servizio: "serviceTypes",
     stato: "status",
+    metodo_pagamento: "paymentMethod",
 }
 
 const state = {
@@ -79,6 +80,9 @@ const getters = {
     },
     projectTypeSelectOptions(state){
         return lodash.has(state, 'projectTypes.records') ? state.projectTypes.records.map( r => ({text: r.name, value: r.id}) ) : []
+    },
+    paymentMethodSelectOptions(state){
+        return lodash.has(state, 'paymentMethod.records') ? state.paymentMethod.records.map( r => ({text: r.name, value: r.id}) ) : []
     },
     services(state){
         return state.services.records || []

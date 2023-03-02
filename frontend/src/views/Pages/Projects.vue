@@ -11,7 +11,7 @@
     </dashboard-header>
 
     <!-- Create modal-->
-    <modal :show.sync="modal.show" size="lg" body-classes="p-0">
+    <modal :show.sync="modal.show" @close="handleCloseModal" size="lg" body-classes="p-0">
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
         <template>
           <div class="text-muted mb-4">
@@ -53,6 +53,24 @@
       @after-save="handleSaveMilestone">
     </milestone-modal>
 
+    <modal :show.sync="preventCloseModal.show" type="notice">
+      <template slot="header"> 
+        <h2 id="modal-title-notification" class="modal-title">Attenzione</h2>
+      </template>
+      <template>
+        <div class="py-3 text-center">
+          <h4 class="heading mt-4">Stai per chiudere la finestra.</h4>
+          <p>Continuare?</p>
+        </div>
+      </template>
+      <template slot="footer"> 
+        <div class="text-right">
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = modal.show = false">Si</base-button>
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = false">No</base-button>
+        </div>
+      </template>
+    </modal>
+    
     <div class="container-fluid mt--6">
       <div>
         <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
@@ -215,9 +233,13 @@ export default {
         id_reference: -1,
         total: 0
       },
+      preventCloseModal: {
+        show: false
+      },
       customerSelectOptions: [],
       statusSelectOptions: [],
-      projectSelectOptions: []
+      projectSelectOptions: [],
+      paymentMethodSelectOptions: []
     };
   },
   created() {
@@ -239,7 +261,7 @@ export default {
           return f[1] ? el[f[0]] == f[1] : true
         } ))
       }
-      this.tableData = filteredOffers.length ? filteredOffers : this.$store.state.projects.records
+      this.tableData = hasFilterHead ? filteredOffers : this.$store.state.projects.records
     },
 
     async fetchData( ) {
@@ -250,12 +272,14 @@ export default {
         this.$store.dispatch(__.GETALL,'contratto'),
         this.$store.dispatch(__.GETALL,'milestone'),
         this.$store.dispatch(__.DESCTABLE, 'progetto'),
-        this.$store.dispatch(__.DESCTABLE, 'milestone')
+        this.$store.dispatch(__.DESCTABLE, 'milestone'),
+        this.$store.dispatch(__.GETALL, 'metodo_pagamento')
       ])
 
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
       this.statusSelectOptions  = this.$store.getters.statusSelectOptions
+      this.paymentMethodSelectOptions = this.$store.getters.paymentMethodSelectOptions
 
       this.modal.fields = this.$store.state.tableDescProgetto.fields
       .filter( f => !this.modal.hiddenColumns.includes(f))
@@ -336,6 +360,11 @@ export default {
       this.tableData = lodash.has(this.$store.state, 'projects.records') ? this.$store.state.projects.records : []
     },
     
+    async handleCloseModal(){
+      this.preventCloseModal.show = true
+      this.modal.show = true
+    },
+    
     openCreateModal(){
       this.modal.type = 'insert'
       this.modal.data = {}
@@ -385,7 +414,7 @@ export default {
       await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
 
       this.milestoneModal.tableColumns = this.$store.state.tableDescMilestone.fields
-      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato'].includes(f))
+      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','data_fatturazione','impianto'].includes(f))
       .map( f => {
         switch(f){
           case 'id':
@@ -419,6 +448,14 @@ export default {
               label: f.replace('_',' '),
               type: 'select',
               options: this.$store.getters.statusSelectOptions
+            }
+          case 'tipo_pagamento': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: 'id_payment_method', 
+              label: f.replace('_',' '),
+              type: 'select',
+              options: this.paymentMethodSelectOptions
             }
           case 'importo_percentuale': 
             return {

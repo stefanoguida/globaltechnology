@@ -4,7 +4,7 @@
       <template slot="footer">
         <div class="row align-items-center py-4">
           <div class="col-lg-12 col-5 text-right">
-            <base-button size="xl" type="primary" @click="handleShowPDF" :disabled="!Object.keys(selectedRow).length">Mostra PDF ordine {{ selectedRow.id_ordine }}</base-button>
+            <!-- <base-button size="xl" type="primary" @click="handleShowPDF" :disabled="!Object.keys(selectedRow).length">Mostra PDF ordine {{ selectedRow.id_ordine }}</base-button> -->
             <base-button size="xl" type="neutral" @click="openCreateModal">Nuovo</base-button>
           </div>
         </div>
@@ -12,7 +12,7 @@
     </dashboard-header>
 
     <!-- Create modal-->
-    <modal :show.sync="modal.show" size="lg" body-classes="p-0">
+    <modal :show.sync="modal.show" @close="handleCloseModal" size="lg" body-classes="p-0">
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
         <template>
           <div class="text-muted mb-4">
@@ -88,6 +88,24 @@
             </div>
         </template>
       </card>
+    </modal>
+
+    <modal :show.sync="preventCloseModal.show" type="notice">
+      <template slot="header"> 
+        <h2 id="modal-title-notification" class="modal-title">Attenzione</h2>
+      </template>
+      <template>
+        <div class="py-3 text-center">
+          <h4 class="heading mt-4">Stai per chiudere la finestra.</h4>
+          <p>Continuare?</p>
+        </div>
+      </template>
+      <template slot="footer"> 
+        <div class="text-right">
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = modal.show = false">Si</base-button>
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = false">No</base-button>
+        </div>
+      </template>
     </modal>
 
     <div class="row">
@@ -267,6 +285,9 @@ export default {
         data: [],
         newFile: {}
       },
+      preventCloseModal: {
+        show: false
+      },
       projectSelectOptions:[],
       statusOrderSelectOptions:[],
       servicesOrderSelectOptions:[],
@@ -385,6 +406,14 @@ export default {
                 label: f.replace('_', ' ').replace(/^\w/, c => c.toUpperCase()),
                 minWidth: 100
               }
+            case 'cliente':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 200
+              }
             case 'importo':
               return {
                 formatter: (row, column) => new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(row[column.property]),
@@ -455,6 +484,10 @@ export default {
       this.modal.condition = [{field: 'id', op: '=', value: row.id}]
       this.modal.show = true
       this.modal.title = 'Modifica ordine'
+    },
+    async handleCloseModal(){
+      this.preventCloseModal.show = true
+      this.modal.show = true
     },
     async handleSave () {
       const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE

@@ -15,13 +15,14 @@ class Contratto extends Model {
         o.id_progetto,
         p.impianto as progetto,
         p.luogo,
-        p.impianto,
+        tp.name as tipo_progetto,
         o.kw,
         o.data_accettazione,
         o.importo_contrattato, 
         sum(if(f.path is null, 0, 1)) has_pdf
         FROM contratti o
         JOIN progetti p ON o.id_progetto = p.id
+        JOIN tipi_progetto tp on p.id_tipo_progetto = tp.id
         JOIN clienti c ON p.id_cliente = c.id
         LEFT JOIN files f on f.id_progetto = p.id and f.tipo = 'contratto'
         where ${condition}
@@ -39,7 +40,7 @@ class Contratto extends Model {
             'id_progetto',
             'progetto',
             'luogo',
-            'impianto',
+            'tipo_progetto',
             'kw',
             'data_accettazione',
             'importo_contrattato'

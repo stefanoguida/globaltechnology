@@ -12,7 +12,7 @@
     </dashboard-header>
 
     <!-- Create modal-->
-    <modal :show.sync="modal.show" size="lg" body-classes="p-0">
+    <modal :show.sync="modal.show" @close="handleCloseModal" size="lg" body-classes="p-0">
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
         <template>
           <div class="text-muted mb-4">
@@ -36,6 +36,24 @@
       </card>
     </modal>
 
+    <modal :show.sync="preventCloseModal.show" type="notice">
+      <template slot="header"> 
+        <h2 id="modal-title-notification" class="modal-title">Attenzione</h2>
+      </template>
+      <template>
+        <div class="py-3 text-center">
+          <h4 class="heading mt-4">Stai per chiudere la finestra.</h4>
+          <p>Continuare?</p>
+        </div>
+      </template>
+      <template slot="footer"> 
+        <div class="text-right">
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = modal.show = false">Si</base-button>
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = false">No</base-button>
+        </div>
+      </template>
+    </modal>
+
     <!-- HEAD -->
     <div class="container-fluid mt--6">
         <card class="no-border-card" body-classes="px-0 pb-1" footer-classes="pb-2">
@@ -50,13 +68,6 @@
   
               <div>
                 <el-form :inline="true" :model="filters">
-                  <el-form-item>
-                    <el-select placeholder="Cliente" v-model="filters.id_cliente" filterable>
-                      <el-option value=""></el-option>
-                      <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.value"></el-option>
-                    </el-select>
-                  </el-form-item>
-
                   <el-form-item>
                     <el-select placeholder="Progetto" v-model="filters.id_progetto" filterable>
                       <el-option value=""></el-option>
@@ -96,7 +107,7 @@
                 label-class-name="custom-header-class"
               ></el-table-column>
               <!-- Action Column -->
-              <el-table-column align="right" label="Actions" :min-width="120">
+              <!-- <el-table-column align="right" label="Actions" :min-width="120">
                 <div slot-scope="{$index, row}" class="d-flex">
                   <base-button @click.native="openUpdateModal($index, row)" class="edit" type="warning" size="sm" icon >
                     <i class="text-white ni ni-ruler-pencil"></i>
@@ -105,7 +116,7 @@
                     <i class="text-white fa fa-trash"></i>
                   </base-button>
                 </div>
-              </el-table-column>
+              </el-table-column> -->
             </el-table>
   
           </div>
@@ -127,7 +138,6 @@ import { BasePagination } from '@/components';
 import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
-import pdf from 'vue-pdf'
 import moment from 'moment'
 import lodash from 'lodash'
 
@@ -158,7 +168,7 @@ export default {
       model: 'milestone',
       title: 'Milestones',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','id_cliente','id_tipo_progetto'],
+      hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_progetto','id_stato','id_contratto','id_cliente','id_tipo_progetto','id_payment_method'],
       hiddenDetailColumns: ['id','trec','created_at','created_by','updated_at','updated_by','id_offerta','id_servizio','codice_fornitura'],
       tableColumns: [],
       tableData: [],
@@ -176,11 +186,14 @@ export default {
       },
       modal: {
         fields:[],
-        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by', 'id_progetto', 'id_stato', 'id_cliente', 'id_tipo_progetto'],
+        hiddenColumns: ['id','trec','created_at','created_by','updated_at','updated_by', 'id_progetto', 'id_stato', 'id_cliente', 'id_payment_method','tipo_progetto','data_fatturazione'],
         show: false,
         type: '', //insert|update
         title: '',
         data: {}
+      },
+      preventCloseModal: {
+        show: false
       },
       projectSelectOptions: [],
       statusOfferSelectOptions: [],
@@ -203,7 +216,7 @@ export default {
         filteredMilestones = this.$store.state.milestone.records
         .filter( el => Object.entries(headFilters).every( f => f[1] ? el[f[0]] == f[1] : true))
       }
-      this.tableData = filteredMilestones.length ? filteredMilestones : this.$store.state.milestone.records
+      this.tableData = hasFilterHead ? filteredMilestones : this.$store.state.milestone.records
     },
 
     async fetchData( ) {
@@ -239,6 +252,61 @@ export default {
         .filter( f => !this.hiddenColumns.includes(f))
         .map( f => {
           switch(f){
+            case 'impianto':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 120
+              }
+            case 'descrizione':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 100
+              }
+            case 'importo_percentuale':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 100
+              }
+            case 'Note':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 150
+              }
+            case 'tipo_pagamento':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 150
+              }
+            case 'data_fatturazione':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 100
+              }
+            case 'importo_valore':
+              return {
+                formatter: (row, column) => Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(row[column.property]),
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' ')
+              }
             default: 
               return {
                 formatter: (row, column) => row[column.property],
@@ -281,6 +349,11 @@ export default {
       this.modal.condition = [{field: 'id', op: '=', value: row.id}]
       this.modal.show = true
       this.modal.title = 'Modifica contratto'
+    },
+
+    async handleCloseModal(){
+      this.preventCloseModal.show = true
+      this.modal.show = true
     },
 
     async handleSave () {

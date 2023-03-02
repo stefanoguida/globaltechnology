@@ -13,13 +13,25 @@
                 </stats-card>
               </div>
               <div class="col-md-3">
-                <stats-card title="Progetti" type="gradient-info" :sub-title="kpi.running_projects" icon="ni ni-chart-bar-32"></stats-card>
+                <stats-card title="Progetti" type="gradient-info" :sub-title="kpi.running_projects" icon="ni ni-chart-bar-32">
+                  <template slot="footer">
+                    <span class="text-success mr-2">{{ kpi.running_offers }} sotto contratto</span>
+                  </template>
+                </stats-card>
               </div>
               <div class="col-md-3">
-                <stats-card title="Kw" type="gradient-info" :sub-title="kpi.total_kw" icon="ni ni-chart-bar-32"></stats-card>
+                <stats-card title="Kw" type="gradient-info" :sub-title="kpi.total_kw" icon="ni ni-chart-bar-32">
+                  <template slot="footer">
+                    <span class="text-success mr-2">{{ kpi.running_offers }} sotto contratto</span>
+                  </template>
+                </stats-card>
               </div>
               <div class="col-md-3">
-                <stats-card title="Fatturato" type="gradient-info" :sub-title="kpi.total_invoiced" icon="ni ni-chart-bar-32"></stats-card>
+                <stats-card title="Fatturato" type="gradient-info" :sub-title="kpi.total_invoiced" icon="ni ni-chart-bar-32">
+                  <template slot="footer">
+                    <span class="text-success mr-2">{{ kpi.running_offers }} in contrattato</span>
+                  </template>
+                </stats-card>
               </div>
             </div>
           </div>
