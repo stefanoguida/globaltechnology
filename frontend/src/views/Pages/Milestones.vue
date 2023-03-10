@@ -69,6 +69,13 @@
               <div>
                 <el-form :inline="true" :model="filters">
                   <el-form-item>
+                    <el-select placeholder="Cliente" v-model="filters.id_cliente" filterable>
+                      <el-option value=""></el-option>
+                      <el-option v-for="customer in customerSelectOptions" :key="customer.value" :label="customer.text" :value="customer.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item>
                     <el-select placeholder="Progetto" v-model="filters.id_progetto" filterable>
                       <el-option value=""></el-option>
                       <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
@@ -96,6 +103,8 @@
               header-row-class-name="thead-light" 
               @sort-change="sortChange" 
               @current-change="handleRowSelect"
+              show-summary
+              :summary-method="getSummaries"
             > 
               <!-- All columns -->
               <el-table-column 
@@ -218,6 +227,39 @@ export default {
       }
       this.tableData = hasFilterHead ? filteredMilestones : this.$store.state.milestone.records
     },
+    getSummaries ( param ) {
+      const { columns, data } = param
+      let sums = []
+      
+      columns.forEach( (column, index) => {
+        if (index === 0 || ['id','importo_percentuale','Note','ritenuta'].includes(column.property) ) {
+          sums[index] = ''
+          return
+        }
+
+        console.log(data)
+        const values = data.map( item => Number(item[column.property]) )
+
+        if ( !values.every( value => Number.isNaN(value)) ) {
+          const sum = values.reduce((prev, curr) => {
+            const value = Number(curr)
+            return !Number.isNaN(value) ? (prev + curr) : prev
+          }, 0)
+          switch(column.property){
+            case "importo_valore":
+              sums[index] = new Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(sum)
+              break
+            default:
+              sums[index] = sum
+          }
+          
+        } else {
+          sums[index] = ''
+        }
+      })
+
+      return sums
+    },
 
     async fetchData( ) {
       try {
@@ -293,8 +335,9 @@ export default {
                 minWidth: 150
               }
             case 'data_fatturazione':
+            case 'data_pagamento':
               return {
-                formatter: (row, column) => row[column.property],
+                formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
                 prop: f, 
                 sortable: true,
                 label: f.replace('_',' '),

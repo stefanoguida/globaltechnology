@@ -9,6 +9,8 @@ class Milestone extends Model {
         const {condition, values} = this.dbService.evaluateConditions(cond)
         const stmt = `
         SELECT 
+		cl.id as id_cliente,
+        cl.ragione_sociale as cliente,
         p.id as id_progetto,
         p.impianto as impianto,
         m.*,
@@ -18,6 +20,7 @@ class Milestone extends Model {
         JOIN stati s ON m.id_stato = s.id and s.entita = 'milestone'
         JOIN contratti c ON c.id = m.id_contratto
         JOIN progetti p ON p.id = c.id_progetto
+        JOIN clienti cl on cl.id = p.id_cliente
         JOIN payment_methods pm on m.id_payment_method = pm.id
         where ${condition}
         `
@@ -50,6 +53,8 @@ class Milestone extends Model {
             'importo_percentuale',
             'importo_valore',
             'id_payment_method',
+            'data_fatturazione',
+            'data_pagamento',
             'tipo_pagamento',
             'id_stato',
             'stato'

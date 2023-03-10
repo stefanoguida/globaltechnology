@@ -93,7 +93,7 @@
                   </el-form-item>
 
                   <el-form-item>
-                    <el-select placeholder="Progetto" v-model="filters.id_progetto" filterable>
+                    <el-select placeholder="Progetto" v-model="filters.id" filterable>
                       <el-option value=""></el-option>
                       <el-option v-for="project in projectSelectOptions" :key="project.value" :label="project.text" :value="project.value"></el-option>
                     </el-select>
@@ -215,7 +215,7 @@ export default {
       },
       filters: {
         id_cliente: '',
-        id_progetto: ''
+        id: ''
       },
       modal: {
         fields:[],
@@ -257,7 +257,6 @@ export default {
       if( hasFilterHead ) {
         filteredOffers = this.$store.state.projects.records
         .filter( el => Object.entries(headFilters).every( f => {
-          console.log(el[f[0]], f[1], el[f[0]] == f[1])
           return f[1] ? el[f[0]] == f[1] : true
         } ))
       }

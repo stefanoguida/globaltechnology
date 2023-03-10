@@ -87,16 +87,36 @@
               </div>
             </div>
 
-            <el-table :data="queriedData" row-key="id" header-row-class-name="thead-light">
+            <el-table 
+              :data="queriedData" 
+              row-key="id" 
+              header-row-class-name="thead-light"
+              show-summary
+              :summary-method="getSummaries"
+            >
               
               <el-table-column type="expand" >
                 <template #default="scope">
-                  <span class="m-2" v-for="m in allMilestones.filter( m => m.id_contratto == scope.row.id)">
-                    <el-tag v-if="m.id_stato == 10" type="danger"> {{ m.descrizione }}</el-tag>
-                    <el-tag v-else-if="m.id_stato == 11" type="warning"> {{ m.descrizione }}</el-tag>
-                    <el-tag v-else-if="m.id_stato == 12" type="success"> {{ m.descrizione }}</el-tag>
-                    <el-tag v-else type="primary"> {{ m.descrizione }}</el-tag>
-                  </span>
+                  <div class="row" >
+                    <div class="cell" v-for="m in allMilestones.filter( m => m.id_contratto == scope.row.id)">
+                      <el-tag v-if="m.id_stato == 10" type="danger">
+                        {{ m.descrizione }} <br />
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                      </el-tag>
+                      <el-tag v-else-if="m.id_stato == 11" type="warning">
+                        {{ m.descrizione }} <br />
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                      </el-tag>
+                      <el-tag v-else-if="m.id_stato == 12" type="success">
+                        {{ m.descrizione }} <br />
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                      </el-tag>
+                      <el-tag v-else type="primary">
+                        {{ m.descrizione }} <br />
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                      </el-tag>
+                    </div>
+                  </div>
                 </template>
               </el-table-column>
 
@@ -152,6 +172,8 @@ import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
 import moment from 'moment'
+moment.updateLocale(moment.locale(), { invalidDate: undefined })
+
 import DashboardHeader from '../Dashboard/DashboardHeader.vue';
 
 import PdfModal from '../Components/PdfModal.vue';
@@ -244,11 +266,35 @@ export default {
       if( hasFilterHead ) {
         filteredOffers = this.baseTableData
         .filter( el => Object.entries(headFilters).every( f => {
-          console.log(el[f[0]], f[1], el[f[0]] == f[1])
           return f[1] ? el[f[0]] == f[1] : true
         } ))
       }
       this.tableData = hasFilterHead ? filteredOffers : this.baseTableData
+    },
+    getSummaries ( param ) {
+      const { columns, data } = param
+      let sums = []
+      
+      columns.forEach( (column, index) => {
+        if (index === 0 || column.property === 'id') {
+          sums[index] = ''
+          return
+        }
+        
+        const values = data.map( item => Number(item[column.property]) )
+
+        if ( !values.every( value => Number.isNaN(value)) ) {
+          const sum = values.reduce((prev, curr) => {
+            const value = Number(curr)
+            return !Number.isNaN(value) ? (prev + curr) : prev
+          }, 0)
+          sums[index] = new Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(sum)
+        } else {
+          sums[index] = ''
+        }
+      })
+
+      return sums
     },
 
     async fetchData( ) {
@@ -296,7 +342,7 @@ export default {
         }
       })
 
-      this.tableColumns = [...this.$store.state.tableDescContratto.fields,'milestone']
+      this.tableColumns = [...this.$store.state.tableDescContratto.fields,'milestone','prezzo_al_kw']
       .filter( f => !this.hiddenColumns.includes(f))
       .map( f => {
         switch(f){
@@ -322,6 +368,13 @@ export default {
               sortable: true,
               label: f.replace('_',' ')
             }
+          case 'prezzo_al_kw':
+            return {
+              formatter: (row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property]),
+              prop: f, 
+              sortable: true,
+              label: f.replace('_',' ')
+            }
           default: 
             return {
               formatter: (row, column) => row[column.property],
@@ -331,8 +384,6 @@ export default {
             }
           }
         })
-      
-      this.tableColumns.push({type:'number', prop: 'prezzo_al_kw', label: 'Prezzo/KW', })
       
       this.tableData = this.baseTableData = this.$store.state.contracts.records.map( c => {
         const milestone = this.$store.state.milestone.records.filter( m => m.id_contratto == c.id)
@@ -359,7 +410,7 @@ export default {
         
         return {
           ...c, 
-          prezzo_al_kw: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(parseFloat(c.importo_contrattato) / parseFloat(c.kw)),
+          prezzo_al_kw: parseFloat(c.importo_contrattato) / parseFloat(c.kw),
           milestone: milestoneToShow, 
           tagClass: tagClass
         }
@@ -377,7 +428,7 @@ export default {
       await this.$store.dispatch(__.GETWHERE, payload)
 
       this.milestoneModal.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
-      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','data_fatturazione','impianto'].includes(f))
+      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','impianto'].includes(f))
       .map( f => {
         switch(f){
           case 'id':
@@ -436,6 +487,22 @@ export default {
               type: 'number',
               disabled:true
             }
+          case 'data_fatturazione': 
+            return {
+              formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
+              prop: f, 
+              label: f.replace('_',' '),
+              type: 'date',
+              minWidth: 100,
+            }
+          case 'data_pagamento': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: f.replace('_',' '),
+              type: 'date',
+              minWidth: 100,
+            }
           default: 
             return {
               formatter: (row, column) => row[column.property],
@@ -446,7 +513,13 @@ export default {
             }
         }
       })
-      this.milestoneModal.tableData = this.$store.state.milestone.records || []
+      this.milestoneModal.tableData = (this.$store.state.milestone.records || []).map( r => (
+        {
+          ... r, 
+          data_fatturazione: moment(r.data_fatturazione).format('YYYY-MM-DD'), 
+          data_pagamento: moment(r.data_pagamento).format('YYYY-MM-DD')
+        }
+      ))
       this.milestoneModal.id_reference = row.id
       this.milestoneModal.total = parseFloat(row.importo_contrattato)
       this.milestoneModal.show = true

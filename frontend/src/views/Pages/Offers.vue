@@ -186,6 +186,8 @@
               header-row-class-name="thead-light" 
               @sort-change="sortChange" 
               @current-change="handleRowSelect"
+              show-summary
+              :summary-method="getSummaries"
             >
               <el-table-column type="expand" >
                 <template #default="props">
@@ -385,6 +387,32 @@ export default {
         .filter( el => filteredOfferRows.length ? filteredOfferRows.includes(el.id) : true )
         this.tableData = filteredOffers
       }
+    },
+    getSummaries ( param ) {
+      const { columns, data } = param
+      let sums = []
+      
+      columns.forEach( (column, index) => {
+        if (index === 0 || column.property === 'id') {
+          sums[index] = ''
+          return
+        }
+
+        const values = data.map( item => Number(item[column.property]) )
+        console.log(values)
+
+        if ( !values.every( value => Number.isNaN(value)) ) {
+          const sum = values.reduce((prev, curr) => {
+            const value = Number(curr)
+            return !Number.isNaN(value) ? (prev + curr) : prev
+          }, 0)
+          sums[index] = new Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(sum)
+        } else {
+          sums[index] = ''
+        }
+      })
+
+      return sums
     },
 
     async fetchData( ) {

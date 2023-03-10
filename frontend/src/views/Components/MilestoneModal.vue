@@ -41,7 +41,7 @@
                       </select>
                     </base-input>
                     <textarea v-else-if="column.type == 'textarea'" v-model="scope.row[column.prop]" class="form-control" rows="1"  @blur="handleBlur(column.prop, scope.row)"></textarea>
-                    <!-- <base-input v-else-if="column.type == 'number'" :min="0" :max="percentageLeft" :type="column.type" v-model="scope.row[column.prop]" :disabled="column.disabled"  @blur="handleBlur(column.prop, scope.row)" ></base-input> -->
+                    <!-- <base-input v-else-if="column.type == 'date'" :type="column.type" v-model="scope.row[column.prop]" :disabled="column.disabled" @blur="handleBlur(column.prop, scope.row)" ></base-input> -->
                     <base-input v-else :type="column.type" v-model="scope.row[column.prop]" :disabled="column.disabled"  @blur="handleBlur(column.prop, scope.row)" ></base-input>
                   </template>
                 </el-table-column>
@@ -221,7 +221,7 @@
           .filter( td => td.importo_percentuale > 0)
           .map( td => {
             const data = {
-              ...lodash.pick(td, ['id_contratto','descrizione','Note','importo_percentuale','importo_valore','id_stato','id_payment_method']),
+              ...lodash.pick(td, ['id_contratto','descrizione','Note','importo_percentuale','importo_valore','id_stato','id_payment_method','data_fatturazione','data_pagamento']),
               id_contratto: this.id_contratto,
             }
             if (td.id) data.id = td.id 
@@ -235,9 +235,8 @@
           return 
         }
 
-        const paidMilestones = this.tableData.reduce( (acc, curr) => (acc += [11,12].includes(curr.id_stato) ? curr.importo_percentuale : 0), 0) // id_stato: 12 -> PAGATO
-        const totMilestones = this.tableData.length
-        const completamentoProgetto = paidMilestones//parseInt(((paidMilestones / totMilestones) * 100))
+        const paidMilestones = this.tableData.length ? this.tableData.reduce( (acc, curr) => (acc += [11,12].includes(curr.id_stato) ? curr.importo_percentuale : 0), 0) : 0
+        const completamentoProgetto = paidMilestones
         const projectId = (this.$store.state.contracts.records.filter( c => c.id == this.id_contratto).pop()).id_progetto
 
         await this.$store.dispatch(__.UPDATE,{model:'progetto', cond:[{field:'id', op:'=', value:projectId}], payload: {completamento: completamentoProgetto}})
