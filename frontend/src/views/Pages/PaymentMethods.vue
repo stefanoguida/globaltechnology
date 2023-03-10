@@ -182,7 +182,7 @@ export default {
       
       await this.$store.dispatch(__.GETALL,this.model)
 
-      this.modal.fields = this.$store.state.metodo_pagamento.fields
+      this.modal.fields = this.$store.state.paymentMethod.fields
       .filter( f => !this.modal.hiddenFields.includes(f))
       .map( f => {
         switch(f){
@@ -195,7 +195,7 @@ export default {
         }
       })
 
-      this.tableColumns = this.$store.state.metodo_pagamento.fields
+      this.tableColumns = this.$store.state.paymentMethod.fields
       .filter( f => !this.tableHiddenFields.includes(f))
       .map( f => {
         switch (f) {
@@ -220,7 +220,7 @@ export default {
         }
       })
       
-      this.tableData = this.$store.state.metodo_pagamento.records
+      this.tableData = this.$store.state.paymentMethod.records
     },
     openCreateModal(){
       this.modal.type = 'insert'
