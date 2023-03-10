@@ -117,6 +117,18 @@
                       </el-tag>
                     </div>
                   </div>
+                  <div class="row">&nbsp;</div>
+                  <div class="row">
+                    <div class="cell" v-for="m in Object.entries(allMilestones.filter( m => m.id_contratto == scope.row.id).reduce( (acc,curr) => {
+                      acc[curr.id_stato] = acc.hasOwnProperty(curr.id_stato) ? parseFloat(acc[curr.id_stato]) + parseFloat(curr.importo_valore) : parseFloat(curr.importo_valore)
+                      return acc
+                    }, {})).sort( (a,b) => b[0] - a[0])">
+                      <el-tag v-if="m[0] == 10" type="danger"> {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m[1])) }} </el-tag>
+                      <el-tag v-else-if="m[0] == 11" type="warning"> {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m[1])) }} </el-tag>
+                      <el-tag v-else-if="m[0] == 12" type="success"> {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m[1])) }} </el-tag>
+                      <el-tag v-else type="primary"> {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m[1])) }} </el-tag>
+                    </div>
+                  </div>
                 </template>
               </el-table-column>
 
@@ -288,7 +300,7 @@ export default {
             const value = Number(curr)
             return !Number.isNaN(value) ? (prev + curr) : prev
           }, 0)
-          sums[index] = new Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(sum)
+          sums[index] = column.property != 'kw' ? new Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(sum) : sum
         } else {
           sums[index] = ''
         }
