@@ -225,6 +225,8 @@
               id_contratto: this.id_contratto,
             }
             if (td.id) data.id = td.id 
+            data.data_fatturazione = data.data_fatturazione || undefined
+            data.data_pagamento = data.data_pagamento || undefined
             return data
           } )
         }
