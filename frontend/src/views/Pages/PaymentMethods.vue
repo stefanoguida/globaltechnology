@@ -229,7 +229,6 @@ export default {
       this.modal.title = 'Create new payment method'
     },
     openUpdateModal(index, row){
-      console.log(row)
       this.modal.type = 'update'
       this.modal.data = row
       this.modal.condition = [{field: 'id', op: '=', value: row.id}]

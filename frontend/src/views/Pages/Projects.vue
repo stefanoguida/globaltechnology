@@ -372,7 +372,6 @@ export default {
     },
 
     openUpdateModal(index, row){
-      console.log('openUpdateModal', row)
       this.modal.type = 'update'
       this.modal.data = Object.entries(row).reduce( (a,c) => {
         switch(c[0]){

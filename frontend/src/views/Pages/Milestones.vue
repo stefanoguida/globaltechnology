@@ -237,7 +237,6 @@ export default {
           return
         }
 
-        console.log(data)
         const values = data.map( item => Number(item[column.property]) )
 
         if ( !values.every( value => Number.isNaN(value)) ) {

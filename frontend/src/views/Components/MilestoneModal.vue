@@ -210,7 +210,7 @@
           }
         }
         else if (fieldName === 'id_stato') {
-          console.log(row)
+          // console.log(row)
         }
       },
 

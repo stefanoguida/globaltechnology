@@ -218,7 +218,6 @@ export default {
       this.modal.title = 'Create new customer'
     },
     openUpdateModal(index, row){
-      console.log(row)
       this.modal.type = 'update'
       this.modal.data = row
       this.modal.condition = [{field: 'id', op: '=', value: row.id}]

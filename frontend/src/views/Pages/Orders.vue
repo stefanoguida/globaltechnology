@@ -510,7 +510,7 @@ export default {
           payload: method === __.INSERT ? {...detailsData, id_ordine: response.data.insertId} : detailsData, 
           cond: this.modal.condition || []
         }
-        console.log(details, response)
+        
         response = await this.$store.dispatch(method, details)
 
         if ( response.error ) {

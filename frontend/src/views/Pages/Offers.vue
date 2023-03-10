@@ -399,7 +399,6 @@ export default {
         }
 
         const values = data.map( item => Number(item[column.property]) )
-        console.log(values)
 
         if ( !values.every( value => Number.isNaN(value)) ) {
           const sum = values.reduce((prev, curr) => {
@@ -827,7 +826,6 @@ export default {
         }, []),
         cond: [{field:'id_offerta', op:'=', value: offer_id}]
       }
-      console.log(servicesData)
       await this.$store.dispatch(__.INSERT, servicesData)
     },
 
@@ -854,7 +852,6 @@ export default {
         model: 'riga_ordine',
         payload: righe_ordine
       }
-      console.log(data)
       await this.$store.dispatch(__.INSERT,data)
     },
 

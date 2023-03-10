@@ -127,7 +127,6 @@
           const idx = this.tableData.findIndex( row => row.id === this.rowSelected.id) 
           this.tableData[idx].completamento = parseInt(this.slider.value)
           this.tableData[idx].progressType = this.tableData[idx].completamento  >= 66 ? 'success' : this.tableData[idx].completamento >= 33 ? 'warning' : 'danger'
-          console.log(this.tableData[idx])
         })
         
       },

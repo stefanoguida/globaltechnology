@@ -355,7 +355,6 @@ export default {
       this.tableDataCSSClass = this.showFiles ? 'container-fluid mt--6 col-8' : this.tableDataCSSClassBase
     },
     handleShowDetails ( row ) {
-      console.log(row)
       this.detailsData = !_.isEqual(this.detailsData, this.$store.state.orderRows.records) ? this.$store.state.orderRows.records : []
       this.showDetails = this.detailsData.length
       this.tableDataCSSClass = this.showDetails ? 'container-fluid mt--6 col-8' : this.tableDataCSSClassBase

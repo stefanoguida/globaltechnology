@@ -149,7 +149,6 @@
         acc.labels.push(moment(curr.data_accettazione).locale('it').format('MMM'))
         return acc
       } ,[]);
-      console.log(this.kwPerMonthChartData)
     }
   };
 </script>
