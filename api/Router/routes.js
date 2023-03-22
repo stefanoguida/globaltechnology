@@ -97,11 +97,36 @@ router.get('/getTotalKw', async (req, res, next) => {
     }
 })
 
+router.get('/getInstalledKW', async (req, res, next) => {
+    try {
+        const Model = factory.getInstanceOf('Kpi')
+        const data = await Model.getInstalledKW()
+        res.status(200).json({error: false, code: null, message: "success", data})
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: "Unknown error"})
+    }
+})
+
 router.get('/getTotalInvoiced', async (req, res, next) => {
     try {
         console.log('getTotalInvoiced')
         const Model = factory.getInstanceOf('Kpi')
         const data = await Model.getTotalInvoiced()
+        res.status(200).json({error: false, code: null, message: "success", data})
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: "Unknown error"})
+    }
+})
+
+router.get('/getTotalContractsValue', async (req, res, next) => {
+    try {
+        console.log('getTotalContractsValue')
+        const Model = factory.getInstanceOf('Kpi')
+        const data = await Model.getTotalContractsValue()
         res.status(200).json({error: false, code: null, message: "success", data})
     } 
     catch ( error ) {

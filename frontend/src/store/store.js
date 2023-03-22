@@ -280,10 +280,32 @@ const actions = {
         }
     },
 
+    async [__.GET_INSTALLED_KW]({commit}) {
+        try {
+            const response = await baseService.getInstalledKW()
+            commit(__.GET_INSTALLED_KW,response)
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
+    },
+
     async [__.GET_TOTAL_INVOICED]({commit}) {
         try {
             const response = await baseService.getTotalInvoiced()
             commit(__.GET_TOTAL_INVOICED,response)
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
+    },
+
+    async [__.GET_TOTAL_CONTRACTS_VALUE]({commit}) {
+        try {
+            const response = await baseService.getTotalContractsValue()
+            commit(__.GET_TOTAL_CONTRACTS_VALUE,response)
             return response
         }
         catch ( error ) {
@@ -387,8 +409,14 @@ const mutations = {
     [__.GET_TOTAL_KW](state, data) {
         state.kpi.total_kw = new Intl.NumberFormat('it-IT').format(data)
     },
+    [__.GET_INSTALLED_KW](state, data) {
+        state.kpi.installed_kw = new Intl.NumberFormat('it-IT').format(data)
+    },
     [__.GET_TOTAL_INVOICED](state, data) {
         state.kpi.total_invoiced = Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(data)
+    },
+    [__.GET_TOTAL_CONTRACTS_VALUE](state, data) {
+        state.kpi.total_contracts_value = Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(data)
     },
     [__.GET_PROJECTS_PROGRESS](state, data) {
         state.projects_progress = data

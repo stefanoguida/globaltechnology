@@ -17,7 +17,12 @@ class Kpi extends Model {
 
     async getRunningProjects () {
         try {
-            const stmt = `select count(*) as running_projects from progetti where id_stato = 5` // stato in lavorazione
+            const stmt = `
+            SELECT COUNT(*) as running_projects FROM (
+                SELECT m.* FROM contratti c 
+                JOIN milestones m ON c.id = m.id_contratto AND m.id_stato = 12 
+                GROUP BY m.id_contratto
+            ) t` // stato in lavorazione
             return (await this.dbService.query(stmt))[0] || 0
         }
         catch ( err ) {
@@ -47,6 +52,29 @@ class Kpi extends Model {
             ORDER BY YEAR(data_accettazione), MONTH(data_accettazione)
             `
             return await this.dbService.query(stmt)
+        }
+        catch ( err ) {
+            console.log(err)
+            return []
+        }
+    }
+
+    async getInstalledKW () {
+        try {
+            const stmt = `
+            SELECT SUM(c.kw) as installed_kw
+            FROM contratti c 
+            JOIN (
+                SELECT * 
+                FROM milestones m2 
+                WHERE id IN (
+                    SELECT MAX(m.id)
+                    FROM contratti c 
+                    JOIN milestones m ON c.id = m.id_contratto 
+                    GROUP BY m.id_contratto
+                ) AND id_stato in (11,12)
+            ) m ON c.id = m.id_contratto `
+            return (await this.dbService.query(stmt))[0] || 0
         }
         catch ( err ) {
             console.log(err)
@@ -85,6 +113,17 @@ class Kpi extends Model {
     async getTotalInvoiced () {
         try {
             const stmt = `select IFNULL(sum(importo_valore),0) as total_invoiced from milestones where id_stato in (11,12) and YEAR(created_at) = YEAR(now())`
+            return (await this.dbService.query(stmt))[0] || 0
+        }
+        catch ( err ) {
+            console.log(err)
+            return []
+        }
+    }
+
+    async getTotalContractsValue () {
+        try {
+            const stmt = `select IFNULL(sum(importo_contrattato),0) as total_contracts_value from contratti where YEAR(created_at) = YEAR(now())`
             return (await this.dbService.query(stmt))[0] || 0
         }
         catch ( err ) {

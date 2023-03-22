@@ -134,6 +134,18 @@ export default class BaseService {
     }
   }
 
+  async getInstalledKW() {
+    try {
+      this.setHeaders()   
+      const response = await this.axios.get(`${this.SERVICE_URL}getInstalledKW`, {headers: this.headers})
+      return response.data.data.installed_kw
+    }
+    catch( error ) {
+      console.log(error)
+      return {}
+    }
+  }
+
   async getTotalKw() {
     try {
       this.setHeaders()   
@@ -151,6 +163,18 @@ export default class BaseService {
       this.setHeaders()   
       const response = await this.axios.get(`${this.SERVICE_URL}getTotalInvoiced`, {headers: this.headers})
       return response.data.data.total_invoiced
+    }
+    catch( error ) {
+      console.log(error)
+      return {}
+    }
+  }
+
+  async getTotalContractsValue() {
+    try {
+      this.setHeaders()   
+      const response = await this.axios.get(`${this.SERVICE_URL}getTotalContractsValue`, {headers: this.headers})
+      return response.data.data.total_contracts_value
     }
     catch( error ) {
       console.log(error)
