@@ -757,7 +757,7 @@ export default {
       return response.data.insertId
     },
 
-    async saveContract( payload ) {
+    async saveContract( method, payload ) {
       const projectFields = ['id_cliente','id_progetto','data_accettazione','importo_contrattato','kw']
       const projectData = lodash.pick(payload, projectFields)
 
@@ -765,14 +765,21 @@ export default {
         model: 'contratto', 
         payload: projectData
       }
-      const response = await this.$store.dispatch(__.INSERT, data)
+      if ( method === __.UPDATE ) {
+        data.cond = [
+          {field: "id_cliente", op: "=", value: projectData.id_cliente}, 
+          {field: "id_progetto", op: "=", value: projectData.id_progetto}
+        ]
+      }
+
+      const response = await this.$store.dispatch(method, data)
       if(response.error) {
         this.$notify({type:'danger', message:"(code: 2) - Errore Creazione contratto!"})
         this.modal.show = false
         return 
       }
 
-      return response.data.insertId
+      return method === __.INSERT ? response.data.insertId : 0
     },
 
     async saveProject () {
@@ -887,10 +894,13 @@ export default {
         payload.data_accettazione = !payload.data_accettazione ? moment().format('YYYY-MM-DD') : moment(payload.data_accettazione).format('YYYY-MM-DD')
         payload.importo_contrattato = !payload.importo_contrattato ? payload.importo_offerto : payload.importo_contrattato
         await this.saveOffer( method, payload )
-        await this.saveOfferRows()
-        const id_contratto = await this.saveContract( payload )
-        await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
-        await this.saveOrders(payload.id_progetto)
+        // await this.saveOfferRows()
+        const id_contratto = await this.saveContract( method, payload )
+
+        if( method == __.INSERT ) {
+          await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
+          await this.saveOrders(method, payload.id_progetto)
+        }
 
         this.modal.show = false
         await this.fetchData()
