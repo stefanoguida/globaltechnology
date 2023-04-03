@@ -324,6 +324,17 @@ const actions = {
         }
     },
 
+    async [__.GET_INVOICED_PROJECTS]({commit}) {
+        try {
+            const response = await baseService.getInvoicedProjects()
+            commit(__.GET_INVOICED_PROJECTS,response)
+            return response
+        }
+        catch ( error ) {
+            return error
+        }
+    },
+
     async [__.GET_CONTRACTS_PER_MONTH]({commit}) {
         try {
             const response = await baseService.getContractsPerMonth()
@@ -420,6 +431,9 @@ const mutations = {
     },
     [__.GET_PROJECTS_PROGRESS](state, data) {
         state.projects_progress = data
+    },
+    [__.GET_INVOICED_PROJECTS](state, data) {
+        state.invoiced_projects = data
     },
     [__.GET_CONTRACTS_PER_MONTH](state, data) {
         state.contracts_per_month = data

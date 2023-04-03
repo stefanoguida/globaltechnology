@@ -131,5 +131,33 @@ class Kpi extends Model {
             return []
         }
     }
+
+    async getInvoicedProjects () {
+        try {
+            const stmt = `
+            select * from (
+                select 
+                c2.ragione_sociale, 
+                p.impianto, 
+                SUM(IF(m.id_stato = 10, m.importo_valore, 0)) da_fatturare,
+                SUM(IF(m.id_stato = 11, m.importo_valore, 0)) fatturato,
+                SUM(IF(m.id_stato = 12, m.importo_valore, 0)) pagato,
+                sum(m.importo_valore) totale
+                from milestones m 
+                join contratti c on m.id_contratto = c.id
+                join clienti c2 on c.id_cliente = c2.id
+                join progetti p on c.id_progetto = p.id 
+                group by p.id
+            ) t 
+            where fatturato < pagato
+            order by pagato - fatturato
+            `
+            return await this.dbService.query(stmt)
+        }
+        catch ( err ) {
+            console.log(err)
+            return []
+        }
+    }
 }
 module.exports = Kpi

@@ -5,7 +5,7 @@
     <!--Charts-->
     <div class="container-fluid mt--6">
       <div class="row">
-        <div class="col-xl-6">
+        <!-- <div class="col-xl-6">
           <card type="default" header-classes="bg-transparent">
             <div slot="header" class="row align-items-center">
               <div class="col">
@@ -20,24 +20,25 @@
             >
             </line-chart>
           </card>
-        </div>
-        <!-- <div class="col-xl-6">
-          <card type="default" header-classes="bg-transparent">
+        </div> -->
+        <div class="col-xl-12">
+          <el-card type="default" header-classes="bg-transparent">
             <div slot="header" class="row align-items-center">
               <div class="col">
-                <h6 class="text-light text-uppercase ls-1 mb-1">Overview</h6>
-                <h5 class="h3 text-white mb-0">Contratti/mese ultimi 12 mesi</h5>
+                <h6 class="text-uppercase ls-1 mb-1">Riepilogo progetti da saldare</h6>
               </div>
             </div>
-            <line-chart
-              :height="350"
-              ref="bigChart"
-              :chart-data="contractsPerMonth.chartData"
-              :extra-options="contractsPerMonth.extraOptions" 
-            >
-            </line-chart>
-          </card>
-        </div> -->
+
+            <el-table :data="invoicedProjectsData">
+              <el-table-column prop="impianto" label="Progetto"></el-table-column>
+              <el-table-column prop="ragione_sociale" label="Cliente"></el-table-column>
+              <el-table-column prop="da_fatturare" label="Da Fatturare" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
+              <el-table-column prop="fatturato" label="Fatturato" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
+              <el-table-column prop="pagato" label="Pagato" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
+              <el-table-column prop="totale" label="Totale" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
+            </el-table>
+          </el-card>
+        </div>
       </div>
     </div>
   </div>
@@ -63,6 +64,7 @@
   import LightTable from './LightTable';
   import SocialTrafficTable from './SocialTrafficTable';
   import PageVisitsTable from './PageVisitsTable';
+  import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card, Checkbox } from 'element-ui';
 
   import ProjectProgress from './ProjectsProgress.vue';
   import Offers from './Offers.vue'
@@ -90,12 +92,23 @@
       ProjectProgress,
       Offers,
       FlatData,
-      DashboardHeader
+      DashboardHeader,
+      [Row.name]: Row,
+      [Col.name]: Col,
+      [Card.name]: Card,
+      [Form.name]: Form,
+      [FormItem.name]: FormItem,
+      [DatePicker.name]: DatePicker,
+      [Select.name]: Select,
+      [Option.name]: Option,
+      [Table.name]: Table,
+      [TableColumn.name]: TableColumn,
+      [Checkbox.name]: Checkbox
     },
     data() {
       return {
         kwPerMonthChartData : null,
-
+        invoicedProjectsData: []
         // kwPerMonth: {
         //   chartData: {
         //     datasets: [
@@ -137,18 +150,13 @@
     methods: {
       async init() {
         await this.$store.dispatch(__.GET_KW_PER_MONTH)
+        await this.$store.dispatch(__.GET_INVOICED_PROJECTS)
+        this.invoicedProjectsData = this.$store.state.invoiced_projects
+        console.log(this.invoicedProjectsData)
       }
     },
     async mounted() {
       await this.init()
-      this.kwPerMonthChartData = this.$store.state.kw_per_month.data.reduce( (acc,curr) => {
-        if( !lodash.has(acc,'datasets') )
-          lodash.set(acc,datasets[0].data,[])
-          
-        acc.datasets[0].data.push(parseFloat(curr.kw))
-        acc.labels.push(moment(curr.data_accettazione).locale('it').format('MMM'))
-        return acc
-      } ,[]);
     }
   };
 </script>

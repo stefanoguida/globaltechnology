@@ -194,6 +194,18 @@ export default class BaseService {
     }
   }
 
+  async getInvoicedProjects() {
+    try {
+      this.setHeaders()   
+      const response = await this.axios.get(`${this.SERVICE_URL}getInvoicedProjects`, {headers: this.headers})
+      return response.data.data
+    }
+    catch( error ) {
+      console.log(error)
+      return {}
+    }
+  }
+  
   async upload (data) {
     try {
       this.setHeaders()  

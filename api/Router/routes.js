@@ -147,6 +147,18 @@ router.get('/getProjectsProgress', async (req, res, next) => {
     }
 })
 
+router.get('/getInvoicedProjects', async (req, res, next) => {
+    try {
+        const Model = factory.getInstanceOf('Kpi')
+        const data = await Model.getInvoicedProjects()
+        res.status(200).json({error: false, code: null, message: "success", data})
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: "Unknown error"})
+    }
+})
+
 router.get('/getFlatData', async (req, res, next) => {
     try {
         const Model = factory.getInstanceOf('Model')
