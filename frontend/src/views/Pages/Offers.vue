@@ -882,7 +882,7 @@ export default {
     },
 
     async handleSave () {
-      const method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
+      let method = this.modal.type == 'insert' ? __.INSERT : __.UPDATE
       
       const payload = lodash.omit(this.modal.data, ['id', 'trec', 'created_at', 'created_by', 'updated_at', 'updated_by', 'prezzo_al_kw', 'has_pdf'])
 
@@ -895,6 +895,8 @@ export default {
         payload.importo_contrattato = !payload.importo_contrattato ? payload.importo_offerto : payload.importo_contrattato
         await this.saveOffer( method, payload )
         // await this.saveOfferRows()
+        const prevState = this.$store.state.offers.records.filter( o => o.id == this.modal.data.id)[0].id_stato || false
+        method = prevState == 1  ? __.INSERT : __.UPDATE
         const id_contratto = await this.saveContract( method, payload )
 
         if( method == __.INSERT ) {

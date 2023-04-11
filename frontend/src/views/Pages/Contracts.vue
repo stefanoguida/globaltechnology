@@ -39,7 +39,44 @@
       </card>
     </modal>
 
-    <pdf-modal :show.sync="pdfmodal.show" :data="pdfmodal.data" :id_reference="pdfmodal.id_reference" @after-save="handleSavedFile"></pdf-modal>
+    <!-- PDF Modal -->
+    <modal :show.sync="pdfmodal.show" size="lg" body-classes="p-0">
+      <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
+        <template>
+          <div class="text-muted mb-4">
+            <small>{{pdfmodal.title}}</small>
+          </div>
+          <el-row>
+            <el-col v-for="file in pdfmodal.data" :span="8">
+              <el-card>
+                <template slot="header">
+                  <pdf :src="file.path" :page=1></pdf>
+                </template>
+                <div>
+                  {{ file.path.split('/').slice(-1).pop() }}
+                  <div class="row">
+                    <div class="col-12 text-right">
+                      <base-button type="primary" size="sm" icon>
+                        <a :href="file.path" target="_blank"><i class="text-white fa fa-eye"></i></a>
+                      </base-button>
+                      <base-button type="danger" @click="handleDeleteFile(file)" size="sm" icon>
+                        <i class="text-white fa fa-trash"></i>
+                      </base-button>
+                    </div>
+                  </div>
+                </div>
+              </el-card>
+            </el-col>
+          </el-row>
+          <div class="d-flex" style="margin-top: 10px;">
+              <file-input initialLabel="carica file" @change="handleFileChange" class="custom-control-inline"></file-input>
+              <base-button type="primary" @click.native="handleSaveFile" :disabled="!pdfmodal.newFile.name">
+                <i class="fa fa-upload"></i>
+              </base-button>
+            </div>
+        </template>
+      </card>
+    </modal>
 
     <milestone-modal 
       :show.sync="milestoneModal.show" 
@@ -148,7 +185,7 @@
               <!-- Action Column -->
               <el-table-column align="right" label="Actions" min-width="100">
                 <template #default="{$index, row}" class="d-flex">
-                  <base-button @click.native="handleShowPDF(row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF</base-button>
+                  <base-button @click.native="handleShowPDF($index, row)"  class="edit" :type="row.has_pdf > 0 ? 'success' : 'primary'" size="sm" icon>PDF</base-button>
                   <base-button @click.native="openMilestoneModal(row)" class="edit" type="warning" size="sm" icon >
                     <i class="ni ni-atom"></i>
                   </base-button>
@@ -177,12 +214,14 @@
 </template>
 <script>
 import { Table, TableColumn, Select, Option, Form, FormItem, DatePicker, Row, Col, Card, Tag } from 'element-ui';
+import FileInput from '@/components/Inputs/FileInput'
 import 'element-ui/lib/theme-chalk/index.css';
 import RouteBreadCrumb from '@/components/Breadcrumb/RouteBreadcrumb'
 import { BasePagination } from '@/components';
 import searchTableMixin from '../Tables/PaginatedTables/searchTableMixin'
 import swal from 'sweetalert2';
 import { Modal } from '@/components';
+import pdf from 'vue-pdf'
 import moment from 'moment'
 moment.updateLocale(moment.locale(), { invalidDate: undefined })
 
@@ -198,6 +237,8 @@ export default {
   mixins: [searchTableMixin],
   components: {
     PdfModal,
+    pdf,
+    FileInput,
     MilestoneModal,
     DashboardHeader,
     Modal,
@@ -632,30 +673,101 @@ export default {
       this.selectedRows = selectedRows
     },
 
-    async handleShowPDF( row ) {
+    async handleShowPDF( index, row ) {
+      this.selectedRow = row
       const payload = {
         model: 'file', 
         cond: [
-          {field:"id_riferimento", op:"=", value:row.id},
-          {field:"tipo", op:"=", value:"contratto"}
-        ]
-      } 
-      await this.$store.dispatch(__.GETWHERE, payload)
-      this.pdfmodal.data = this.$store.state.file.records
-      this.pdfmodal.id_reference = row.id
-      this.pdfmodal.show = true
-    },
-
-    async handleSavedFile ( id ) {
-      const payload = {
-        model: 'file', 
-        cond: [
-          {field:"id_riferimento", op:"=", value:id},
-          {field:"tipo", op:"=", value:"contratto"}
+          { field:"id_riferimento", op:"=", value:row.id },
+          { field:"tipo", op:"=", value:"contratto" }
         ]
       }
       await this.$store.dispatch(__.GETWHERE, payload)
       this.pdfmodal.data = this.$store.state.file.records
+      this.pdfmodal.show = true
+    },
+
+    async handleSaveFile () {
+
+      const data = {
+        type:'contratto', 
+        id_riferimento: this.selectedRow.id, 
+        file: this.pdfmodal.newFile 
+      }
+      const res = await this.$store.dispatch(__.UPLOAD, data)
+      if (res.error) {
+        swal.fire({
+          title: `Attenzione`,
+          text: 'Upload fallito',
+          buttonsStyling: false,
+          customClass: {
+            confirmButton: 'btn btn-warning'
+          },
+          icon: 'warning'
+        })
+      }
+      else {
+        this.modal.show = false
+        swal.fire({
+          title: `File caricato`,
+          text: 'Il file è stato caricato correttamente!',
+          buttonsStyling: false,
+          customClass: {
+            confirmButton: 'btn btn-success'
+          },
+          icon: 'success'
+        })
+        const payload = {
+          model: 'file', 
+          cond: [
+            {field:"id_riferimento", op:"=", value:this.selectedRow.id},
+            {field:"tipo", op:"=", value:"offerta"}
+          ]
+        }
+        await this.$store.dispatch(__.GETWHERE, payload)
+        this.pdfmodal.data = this.$store.state.file.records
+      }
+    },
+
+    handleFileChange(files){
+      this.pdfmodal.newFile = files[0]
+    },
+
+    handleDeleteFile( file ){
+      swal.fire({
+        title: 'Sicuro?',
+        text: `Questa azione non può essere annullata!`,
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonClass: 'btn btn-success btn-fill',
+        cancelButtonClass: 'btn btn-danger btn-fill',
+        confirmButtonText: 'Si, cancella!',
+        cancelButtonText: 'Annulla',
+        buttonsStyling: false
+      })
+      .then( async result => {
+        if (result.value) {
+          const res = await this.$store.dispatch(__.DELETEFILE, file.id)
+          if (!res.error){
+            swal.fire({
+              title: 'Cancellato!',
+              text: `File cancellato`,
+              type: 'success',
+              confirmButtonClass: 'btn btn-success btn-fill',
+              buttonsStyling: false
+            });
+          }
+          const idx = this.pdfmodal.data.findIndex( f => f.id == file.id )
+          this.pdfmodal.data.splice(idx,1)
+        }
+      })
+      .catch( (error) => {
+        swal.fire({
+            title: 'Errore!',
+            text: `Impossibile cancellare il record`,
+            icon: 'error'
+          });
+      })
     },
 
     async handleSaveMilestone ( id ) {

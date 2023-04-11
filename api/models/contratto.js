@@ -24,7 +24,7 @@ class Contratto extends Model {
         JOIN progetti p ON o.id_progetto = p.id
         JOIN tipi_progetto tp on p.id_tipo_progetto = tp.id
         JOIN clienti c ON p.id_cliente = c.id
-        LEFT JOIN files f on f.id_progetto = p.id and f.tipo = 'contratto'
+        LEFT JOIN files f on f.id_riferimento = o.id and f.tipo = 'contratto'
         where ${condition}
         GROUP BY o.id
         `

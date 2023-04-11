@@ -29,7 +29,7 @@ class Offerta extends Model {
         JOIN stati s on o.id_stato = s.id and s.entita = 'offerta'
         LEFT JOIN clienti c ON o.id_cliente = c.id
         LEFT JOIN tipi_progetto tp ON o.id_tipo_progetto = tp.id
-        LEFT JOIN files f on f.id_riferimento = o.id_progetto and f.tipo = 'offerta'
+        LEFT JOIN files f on f.id_riferimento = o.id and f.tipo = 'offerta'
         where ${condition}
         group by o.id
         `
