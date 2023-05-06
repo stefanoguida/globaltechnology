@@ -489,7 +489,7 @@ export default {
               formatter: (row, column) => row[column.property],
               prop: f, 
               label: f.replace('_',' '),
-              type: 'input',
+              type: 'text',
               minWidth: 50,
               disabled:true
             }
@@ -497,7 +497,7 @@ export default {
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace('_',' '),
+              label: 'ID',
               type: 'input',
               disabled: true
             }
@@ -507,7 +507,7 @@ export default {
               prop: f, 
               label: f.replace('_',' '),
               type: 'textarea',
-              minWidth: 180
+              minWidth: 120
             }
           case 'stato': 
             return {
@@ -515,7 +515,8 @@ export default {
               prop: 'id_stato', 
               label: f.replace('_',' '),
               type: 'select',
-              options: this.statusOfferSelectOptions
+              options: this.statusOfferSelectOptions,
+              minWidth: 100
             }
           case 'tipo_pagamento': 
             return {
@@ -523,20 +524,46 @@ export default {
               prop: 'id_payment_method', 
               label: f.replace('_',' '),
               type: 'select',
-              options: this.paymentMethodSelectOptions
+              options: this.paymentMethodSelectOptions,
+              minWidth: 100
             }
           case 'importo_percentuale': 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace('_',' '),
+              label: 'importo %',
               type: 'number'
             }
           case 'importo_valore': 
             return {
               formatter: (row, column) => row[column.property],
               prop: f, 
-              label: f.replace('_',' '),
+              label: 'importo val',
+              type: 'number',
+              disabled:true,
+              minWidth: 90
+            }
+          case 'ritenuta_percentuale': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: 'ritenuta %',
+              type: 'number'
+            }
+          case 'ritenuta_valore': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: 'fatturato val',
+              type: 'number',
+              disabled:true,
+              minWidth: 90
+            }
+          case 'fatturato_percentuale': 
+            return {
+              formatter: (row, column) => row[column.property],
+              prop: f, 
+              label: 'fatturato %',
               type: 'number',
               disabled:true
             }

@@ -19,6 +19,7 @@ class Contratto extends Model {
         o.kw,
         o.data_accettazione,
         o.importo_contrattato, 
+        o.ritenuta_su_milestones,
         sum(if(f.path is null, 0, 1)) has_pdf
         FROM contratti o
         JOIN progetti p ON o.id_progetto = p.id
@@ -43,7 +44,8 @@ class Contratto extends Model {
             'tipo_progetto',
             'kw',
             'data_accettazione',
-            'importo_contrattato'
+            'importo_contrattato',
+            'ritenuta_su_milestones'
         ]
     }
 

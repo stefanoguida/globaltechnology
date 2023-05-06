@@ -1,6 +1,6 @@
 <template>
   <div>
-    <modal :show.sync="show" size="xl" @close="handleCloseModal" body-classes="p-0 modal-backdrop m--8">
+    <modal :show.sync="show" size="xl" @close="handleCloseModal" >
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
           <template>
             <div class="text-muted mb-4">
@@ -11,11 +11,17 @@
                 <span v-if="percentageLeft < 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
               </div>
               <div class="col-2 text-right">
-                <base-input type="number" step="5" min="0" max="100" label="Ritenuta %" v-model="ritenuta_su_milestones"></base-input>
+                <!-- <base-input type="number" step="5" min="0" max="100" label="Ritenuta %" v-model="ritenuta_su_milestones"></base-input> -->
+                <!-- <span>Ritenuta </span>
+                <el-switch
+                  v-model="ritenuta_su_milestones"
+                  style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                /> -->
               </div>
               <div class="col-4 text-right">
                 <span>Importo contratto: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(total) }}</span><br />
-                <span>Importo totale SAL: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleSal) }}</span>
+                <span>Importo totale SAL: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleSal) }}</span><br />
+                <span>Importo Ritenute: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleRitenute) }}</span>
               </div>
               <div class="col-1 text-right">
                 <base-button @click.native="addNewEmptyRow()" :disabled="percentageLeft<0" class="edit" type="primary" size="sm" icon >
@@ -35,13 +41,13 @@
                   label-class-name="custom-header-class"
                 >
                   <template slot-scope="scope">
+                    
                     <base-input v-if="column.type == 'select'" @blur="handleBlur(column.prop, scope.row)" >
                       <select class="form-control" v-model="scope.row[column.prop]" filterable>
                         <option v-for="option in column.options" :value="option.value">{{ option.text }}</option>
                       </select>
                     </base-input>
                     <textarea v-else-if="column.type == 'textarea'" v-model="scope.row[column.prop]" class="form-control" rows="1"  @blur="handleBlur(column.prop, scope.row)"></textarea>
-                    <!-- <base-input v-else-if="column.type == 'date'" :type="column.type" v-model="scope.row[column.prop]" :disabled="column.disabled" @blur="handleBlur(column.prop, scope.row)" ></base-input> -->
                     <base-input v-else :type="column.type" v-model="scope.row[column.prop]" :disabled="column.disabled"  @blur="handleBlur(column.prop, scope.row)" ></base-input>
                   </template>
                 </el-table-column>
@@ -54,9 +60,14 @@
                 </el-table-column>
               </el-table>
             </form>
-            <div class="text-right">
-              <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>
-              <base-button type="primary" class="my-4" @click="handleSave()">Salva</base-button>
+            <div style="display: flex; flex-wrap: wrap;">
+              <div class="text-left" style="width: 50%;">
+                <base-button type="success" class="my-4" @click="addNewEmptyRow(true)">Genera SAL Ritenuta</base-button>
+              </div>
+              <div class="text-right" style="width: 50%;">
+                <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>
+                <base-button type="primary" class="my-4" @click="handleSave()">Salva</base-button>
+              </div>
             </div>
           </template>
         </card>
@@ -83,7 +94,7 @@
   
 </template>
 <script>
-  import { Table, TableColumn, Select, Option, Row, Col, Card } from 'element-ui';
+  import { Table, TableColumn, Select, Option, Row, Col, Card, Switch } from 'element-ui';
   import { Modal } from '@/components';
   import swal from 'sweetalert2';
   import FileInput from '@/components/Inputs/FileInput'
@@ -102,7 +113,8 @@
       [Select.name]: Select,
       [Option.name]: Option,
       [Table.name]: Table,
-      [TableColumn.name]: TableColumn
+      [TableColumn.name]: TableColumn,
+      [Switch.name]: Switch
     },
     props: {
       show: {
@@ -142,8 +154,19 @@
       totaleSal(){
         return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.importo_valore || 0) ), 0)
       },
+      totaleRitenute(){
+        return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.importo_valore || 0) - parseFloat(curr.ritenuta_valore || 0) ), 0)
+      },
       percentageLeft(){
         const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.importo_percentuale || 0) ), 0)
+        return 100 - tot_percentage 
+      },
+      holdPercentageLeft(){
+        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.ritenuta_percentuale || 0) ), 0)
+        return 100 - tot_percentage 
+      },
+      InvoicedPercentageLeft(){
+        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.fatturato_percentuale || 0) ), 0)
         return 100 - tot_percentage 
       }
     },
@@ -157,6 +180,19 @@
           this.$emit("close");
         }
 
+      },
+      tableData: {
+        handler: function (rows, oldRows) {
+          return rows.map( val => {
+            const importo_valore = (this.total * val.importo_percentuale) / 100
+            const importo_percentuale = val.importo_valore - (val.importo_valore * val.ritenuta_percentuale) / 100
+            val.importo_valore = Math.round( (importo_valore + Number.EPSILON) * 100 ) / 100 || 0
+            val.ritenuta_valore = Math.round( (importo_percentuale + Number.EPSILON) * 100 ) / 100 || 0
+            val.fatturato_percentuale = Math.round( ((val.ritenuta_valore / this.total) + Number.EPSILON) * 100 ) || 0
+            return val
+          })
+        },
+        deep: true
       }
     },
     data(){
@@ -178,15 +214,28 @@
         this.show = true
       },
       
-      addNewEmptyRow() {
+      addNewEmptyRow(ritenuta = false) {
         const emptyRow = Object.keys(this.tableData[0]).reduce( (acc,curr) => {
           switch (curr) {
             case 'id_stato':
               acc[curr] = 10
               break;
-            case 'descrizione':
-              acc[curr] = 'SAL ' + (parseInt(this.tableData.length) + 1)
+            case 'id_payment_method':
+              acc[curr] = 1
               break;
+            case 'descrizione':
+              acc[curr] =  'SAL ' + (parseInt(this.tableData.length) + 1) + (ritenuta ? ' R' : '')
+              break;
+            case 'importo_percentuale':
+            case 'fatturato_percentuale':
+              acc[curr] = ritenuta ? 100 - this.tableData.reduce( (acc, curr) => acc += curr.fatturato_percentuale, 0) : 0
+              break
+            case 'importo_valore':
+              acc[curr] = ritenuta ? this.totale_sal * (this.tableData.reduce( (acc, curr) => acc += curr.fatturato_percentuale, 0) / 100) : 0
+              break
+            case 'ritenuta_percentuale':
+              acc[curr] = 0
+              break
             default:
               acc[curr] = ''
               break;
@@ -194,7 +243,11 @@
           // acc[curr] = curr == 'id_stato' ? 10 : ''
           return acc
         },{})
-      this.tableData.push(emptyRow)
+        this.tableData.push(emptyRow)
+      // if(ritenuta) {
+      //   this.handleBlur('importo_percentuale', emptyRow)
+      //   this.handleBlur('ritenuta_percentuale', emptyRow)
+      // }
       },
 
       handleBlur(fieldName, row) {
@@ -203,25 +256,84 @@
           const val = (this.total * this.tableData[idx].importo_percentuale) / 100
           this.tableData[idx].importo_valore = Math.round( (val + Number.EPSILON) * 100 ) / 100 || 0
 
-          if ( this.percentageLeft < 0 ) {
-            this.$notify({type:'danger', message:'Percentuali superiori al 100%!'})
-            this.tableData[idx].importo_percentuale = 0
-            this.tableData[idx].importo_valore = 0
-          }
+          // if ( this.percentageLeft < 0 ) {
+          //   this.$notify({type:'danger', message:'Percentuali superiori al 100%!'})
+          //   this.tableData[idx].importo_percentuale = 0
+          //   this.tableData[idx].importo_valore = 0
+          // }
         }
+        else if( fieldName === 'ritenuta_percentuale') {
+          const idx = row.id ? this.tableData.findIndex( t => t.id == row.id) : this.tableData.length -1 
+          const val = this.tableData[idx].importo_valore - (this.tableData[idx].importo_valore * this.tableData[idx].ritenuta_percentuale) / 100
+          this.tableData[idx].ritenuta_valore = Math.round( (val + Number.EPSILON) * 100 ) / 100 || 0
+          this.tableData[idx].fatturato_percentuale = Math.round( ((this.tableData[idx].ritenuta_valore / this.total) + Number.EPSILON) * 100 ) || 0
+
+          if ( this.InvoicedPercentageLeft < 0 ) {
+            this.$notify({type:'danger', message:'Percentuali di fatturato superiori al 100%!'})
+            this.tableData[idx].fatturato_percentuale = 0
+            this.tableData[idx].ritenuta_percentuale = 0
+            this.tableData[idx].ritenuta_valore = 0
+        }
+        }
+        else if (fieldName === 'id_stato') {
+          // console.log(row)
+          }
         else if (fieldName === 'id_stato') {
           // console.log(row)
         }
       },
 
+      beforeSave () {
+        return new Promise( (resolve, reject) => {
+          if (this.totaleSal - this.totaleRitenute == this.total) {
+            resolve(true)
+            return
+          }
+          swal.fire({
+            title: 'Il totale dei SAL non raggiunge il 100% dell\'importo da fatturare. Procedere ?',
+            text: `Questa azione non può essere annullata!`,
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonClass: 'btn btn-success btn-fill',
+            cancelButtonClass: 'btn btn-danger btn-fill',
+            confirmButtonText: 'Si, cancella!',
+            cancelButtonText: 'Annulla',
+            buttonsStyling: false
+          })
+          .then(result => {
+            resolve(result.isConfirmed)
+          })
+          .catch( () => {
+            resolve(false)
+          })
+        })
+      },
+
       async handleSave() {
+        const beforeSaveRet = await this.beforeSave()
+        console.log(beforeSaveRet)
+        if (!beforeSaveRet)  return false
+
         const data = {
           model: 'milestone', 
           payload: this.tableData
           .filter( td => td.importo_percentuale > 0)
           .map( td => {
             const data = {
-              ...lodash.pick(td, ['id_contratto','descrizione','Note','importo_percentuale','importo_valore','id_stato','id_payment_method','data_fatturazione','data_pagamento']),
+              ...lodash.pick(td, [
+                'id_contratto',
+                'descrizione',
+                'Note',
+                'importo_percentuale',
+                'importo_valore',
+                'ritenuta_percentuale',
+                'ritenuta_valore',
+                'fatturato_percentuale',
+                'id_stato',
+                'id_payment_method',
+                'data_fatturazione',
+                'data_pagamento'
+              ]),
               id_contratto: this.id_contratto,
             }
             if (td.id) data.id = td.id 

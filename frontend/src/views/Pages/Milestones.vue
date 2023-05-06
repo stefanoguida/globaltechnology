@@ -232,7 +232,7 @@ export default {
       let sums = []
       
       columns.forEach( (column, index) => {
-        if (index === 0 || ['id','importo_percentuale','Note','ritenuta'].includes(column.property) ) {
+        if (index === 0 || ['id','importo_percentuale','ritenuta_percentuale','Note','ritenuta'].includes(column.property) ) {
           sums[index] = ''
           return
         }
@@ -246,6 +246,7 @@ export default {
           }, 0)
           switch(column.property){
             case "importo_valore":
+            case "ritenuta_valore":
               sums[index] = new Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(sum)
               break
             default:
@@ -317,6 +318,14 @@ export default {
                 label: f.replace('_',' '),
                 minWidth: 100
               }
+            case 'ritenuta_percentuale':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' '),
+                minWidth: 100
+              }
             case 'Note':
               return {
                 formatter: (row, column) => row[column.property],
@@ -343,6 +352,13 @@ export default {
                 minWidth: 100
               }
             case 'importo_valore':
+              return {
+                formatter: (row, column) => Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(row[column.property]),
+                prop: f, 
+                sortable: true,
+                label: f.replace('_',' ')
+              }
+            case 'ritenuta_valore':
               return {
                 formatter: (row, column) => Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(row[column.property]),
                 prop: f, 
