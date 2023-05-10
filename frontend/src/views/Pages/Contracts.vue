@@ -499,6 +499,7 @@ export default {
               prop: f, 
               label: 'ID',
               type: 'input',
+              minWidth: 100,
               disabled: true
             }
           case 'Note':
@@ -529,43 +530,46 @@ export default {
             }
           case 'importo_percentuale': 
             return {
-              formatter: (row, column) => row[column.property],
+              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
               prop: f, 
               label: 'importo %',
-              type: 'number'
+              type: 'number',
+              minWidth: 90
             }
           case 'importo_valore': 
             return {
-              formatter: (row, column) => row[column.property],
+              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
               prop: f, 
               label: 'importo val',
               type: 'number',
               disabled:true,
-              minWidth: 90
+              minWidth: 120
             }
           case 'ritenuta_percentuale': 
             return {
-              formatter: (row, column) => row[column.property],
+              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
               prop: f, 
               label: 'ritenuta %',
-              type: 'number'
+              type: 'number',
+              minWidth: 90
             }
           case 'ritenuta_valore': 
             return {
-              formatter: (row, column) => row[column.property],
+              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
               prop: f, 
               label: 'fatturato val',
               type: 'number',
               disabled:true,
-              minWidth: 90
+              minWidth: 120
             }
           case 'fatturato_percentuale': 
             return {
-              formatter: (row, column) => row[column.property],
+              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
               prop: f, 
               label: 'fatturato %',
               type: 'number',
-              disabled:true
+              disabled:true,
+              minWidth: 90
             }
           case 'data_fatturazione': 
             return {
@@ -573,7 +577,7 @@ export default {
               prop: f, 
               label: f.replace('_',' '),
               type: 'date',
-              minWidth: 100,
+              minWidth: 120,
             }
           case 'data_pagamento': 
             return {
@@ -581,7 +585,7 @@ export default {
               prop: f, 
               label: f.replace('_',' '),
               type: 'date',
-              minWidth: 100,
+              minWidth: 120,
             }
           default: 
             return {

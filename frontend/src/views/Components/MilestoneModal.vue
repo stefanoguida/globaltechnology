@@ -1,76 +1,77 @@
 <template>
   <div>
     <modal :show.sync="show" size="xl" @close="handleCloseModal" >
-      <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
-          <template>
-            <div class="text-muted mb-4">
-              <small>{{title}}</small>
-            </div>
-            <div class="row">
-              <div class="col-5 text-right">
-                <span v-if="percentageLeft < 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
-              </div>
-              <div class="col-2 text-right">
-                <!-- <base-input type="number" step="5" min="0" max="100" label="Ritenuta %" v-model="ritenuta_su_milestones"></base-input> -->
-                <!-- <span>Ritenuta </span>
-                <el-switch
-                  v-model="ritenuta_su_milestones"
-                  style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                /> -->
-              </div>
-              <div class="col-4 text-right">
-                <span>Importo contratto: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(total) }}</span><br />
-                <span>Importo totale SAL: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleSal) }}</span><br />
-                <span>Importo Ritenute: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleRitenute) }}</span>
-              </div>
-              <div class="col-1 text-right">
-                <base-button @click.native="addNewEmptyRow()" :disabled="percentageLeft<0" class="edit" type="primary" size="sm" icon >
-                <i class="ni ni-fat-add"></i>
+      <template>
+        <div class="text-muted mb-4">
+          <h1>{{title}}</h1>
+        </div>
+        <div class="row">
+          <div class="col-5 text-right">
+            <span v-if="percentageLeft < 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
+          </div>
+          <div class="col-2 text-right">
+            <!-- <base-input type="number" step="5" min="0" max="100" label="Ritenuta %" v-model="ritenuta_su_milestones"></base-input> -->
+            <!-- <span>Ritenuta </span>
+            <el-switch
+              v-model="ritenuta_su_milestones"
+              style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+            /> -->
+          </div>
+          <div class="col-4 text-right">
+            <span>Importo contratto: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(total) }}</span><br />
+            <span>Importo totale SAL: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleSal) }}</span><br />
+            <span>Importo totale Fatturato: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleFatturato) }}</span><br />
+            <span>Importo Ritenute: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleRitenute) }}</span>
+          </div>
+          <div class="col-1 text-right">
+            <base-button @click.native="addNewEmptyRow()" :disabled="percentageLeft<0" class="edit" type="primary" size="sm" icon >
+            <i class="ni ni-fat-add"></i>
+            </base-button>
+          </div>
+        </div>
+        <form v-if="editable" role="form">
+          <el-table :data="tableData" row-key="descrizione" header-row-class-name="thead-light">
+            <el-table-column 
+              v-for="column in tableColumns" 
+              :key="column.label" 
+              v-bind="column" 
+              :formatter="column.formatter" 
+              :min-width="column.minWidth||0"
+              :readonly="!column.editable"
+              label-class-name="custom-header-class"
+            >
+              <template slot-scope="scope">
+                <!-- <base-input v-if="column.type == 'select'" :formatter="column.formatter" @blur="handleBlur(column.prop, scope.row)" >
+                  <select class="form-control" v-model="scope.row[column.prop]" filterable>
+                    <option v-for="option in column.options" :value="option.value">{{ option.text }}</option>
+                  </select>
+                </base-input> -->
+                <el-select v-if="column.type == 'select'" v-model="scope.row[column.prop]" filterable>
+                  <el-option v-for="option in column.options" :value="option.value" :label="option.text"></el-option>
+                </el-select>
+                <textarea v-else-if="column.type == 'textarea'" v-model="scope.row[column.prop]" class="form-control" rows="1"></textarea>
+                <el-input v-else :type="column.type" v-model="scope.row[column.prop]" :formatter="column.formatter" :disabled="column.disabled"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column align="right" :min-width="50">
+              <div slot-scope="{$index, row}" class="d-flex">
+                <base-button @click.native="handleDelete($index, row)" class="remove btn-link" type="danger" size="sm" icon>
+                  <i class="text-white fa fa-trash"></i>
                 </base-button>
               </div>
-            </div>
-            <form v-if="editable" role="form">
-              <el-table :data="tableData" row-key="descrizione" header-row-class-name="thead-light">
-                <el-table-column 
-                  v-for="column in tableColumns" 
-                  :key="column.label" 
-                  v-bind="column" 
-                  :formatter="column.formatter" 
-                  :min-width="column.minWidth||0"
-                  :readonly="!column.editable"
-                  label-class-name="custom-header-class"
-                >
-                  <template slot-scope="scope">
-                    
-                    <base-input v-if="column.type == 'select'" @blur="handleBlur(column.prop, scope.row)" >
-                      <select class="form-control" v-model="scope.row[column.prop]" filterable>
-                        <option v-for="option in column.options" :value="option.value">{{ option.text }}</option>
-                      </select>
-                    </base-input>
-                    <textarea v-else-if="column.type == 'textarea'" v-model="scope.row[column.prop]" class="form-control" rows="1"  @blur="handleBlur(column.prop, scope.row)"></textarea>
-                    <base-input v-else :type="column.type" v-model="scope.row[column.prop]" :disabled="column.disabled"  @blur="handleBlur(column.prop, scope.row)" ></base-input>
-                  </template>
-                </el-table-column>
-                <el-table-column align="right" :min-width="50">
-                  <div slot-scope="{$index, row}" class="d-flex">
-                    <base-button @click.native="handleDelete($index, row)" class="remove btn-link" type="danger" size="sm" icon>
-                      <i class="text-white fa fa-trash"></i>
-                    </base-button>
-                  </div>
-                </el-table-column>
-              </el-table>
-            </form>
-            <div style="display: flex; flex-wrap: wrap;">
-              <div class="text-left" style="width: 50%;">
-                <base-button type="success" class="my-4" @click="addNewEmptyRow(true)">Genera SAL Ritenuta</base-button>
-              </div>
-              <div class="text-right" style="width: 50%;">
-                <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>
-                <base-button type="primary" class="my-4" @click="handleSave()">Salva</base-button>
-              </div>
-            </div>
-          </template>
-        </card>
+            </el-table-column>
+          </el-table>
+        </form>
+        <div style="display: flex; flex-wrap: wrap;">
+          <div class="text-left" style="width: 50%;">
+            <base-button type="success" class="my-4" @click="addNewEmptyRow(true)">Genera SAL Ritenuta</base-button>
+          </div>
+          <div class="text-right" style="width: 50%;">
+            <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>
+            <base-button type="primary" class="my-4" @click="handleSave()">Salva</base-button>
+          </div>
+        </div>
+      </template>
     </modal>
   
     <modal :show.sync="preventCloseModal.show" type="notice">
@@ -152,10 +153,13 @@
     },
     computed: {
       totaleSal(){
-        return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.importo_valore || 0) ), 0)
+        return this.tableData.reduce( (acc, curr) => (acc += !curr.ritenuta ? parseFloat(curr.importo_valore || 0) : 0 ), 0)
       },
       totaleRitenute(){
         return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.importo_valore || 0) - parseFloat(curr.ritenuta_valore || 0) ), 0)
+      },
+      totaleFatturato(){
+        return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.ritenuta_valore || 0) ), 0)
       },
       percentageLeft(){
         const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.importo_percentuale || 0) ), 0)
@@ -182,13 +186,19 @@
 
       },
       tableData: {
-        handler: function (rows, oldRows) {
+        handler: function (rows) {
           return rows.map( val => {
-            const importo_valore = (this.total * val.importo_percentuale) / 100
-            const importo_percentuale = val.importo_valore - (val.importo_valore * val.ritenuta_percentuale) / 100
-            val.importo_valore = Math.round( (importo_valore + Number.EPSILON) * 100 ) / 100 || 0
-            val.ritenuta_valore = Math.round( (importo_percentuale + Number.EPSILON) * 100 ) / 100 || 0
-            val.fatturato_percentuale = Math.round( ((val.ritenuta_valore / this.total) + Number.EPSILON) * 100 ) || 0
+            val.importo_valore = Number(Math.round((this.total * val.importo_percentuale) / 100 + 'e2') + 'e-2')
+            val.ritenuta_valore = Number(Math.round(val.importo_valore - ((val.importo_valore * val.ritenuta_percentuale) / 100) + 'e2') + 'e-2')
+            val.fatturato_percentuale = Number(Math.round((val.ritenuta_valore / this.total) * 100 + 'e2') + 'e-2')
+
+            if ( this.InvoicedPercentageLeft < 0 ) {
+              this.$notify({type:'danger', message:'Percentuali di fatturato superiori al 100%!'})
+              val.fatturato_percentuale = 0
+              val.ritenuta_percentuale = 0
+              val.ritenuta_valore = 0
+            }
+
             return val
           })
         },
@@ -243,49 +253,16 @@
           // acc[curr] = curr == 'id_stato' ? 10 : ''
           return acc
         },{})
-        this.tableData.push(emptyRow)
+        this.tableData.push({...emptyRow, ritenuta: true})
       // if(ritenuta) {
       //   this.handleBlur('importo_percentuale', emptyRow)
       //   this.handleBlur('ritenuta_percentuale', emptyRow)
       // }
       },
 
-      handleBlur(fieldName, row) {
-        if ( fieldName === 'importo_percentuale' ) {
-          const idx = row.id ? this.tableData.findIndex( t => t.id == row.id) : this.tableData.length -1 
-          const val = (this.total * this.tableData[idx].importo_percentuale) / 100
-          this.tableData[idx].importo_valore = Math.round( (val + Number.EPSILON) * 100 ) / 100 || 0
-
-          // if ( this.percentageLeft < 0 ) {
-          //   this.$notify({type:'danger', message:'Percentuali superiori al 100%!'})
-          //   this.tableData[idx].importo_percentuale = 0
-          //   this.tableData[idx].importo_valore = 0
-          // }
-        }
-        else if( fieldName === 'ritenuta_percentuale') {
-          const idx = row.id ? this.tableData.findIndex( t => t.id == row.id) : this.tableData.length -1 
-          const val = this.tableData[idx].importo_valore - (this.tableData[idx].importo_valore * this.tableData[idx].ritenuta_percentuale) / 100
-          this.tableData[idx].ritenuta_valore = Math.round( (val + Number.EPSILON) * 100 ) / 100 || 0
-          this.tableData[idx].fatturato_percentuale = Math.round( ((this.tableData[idx].ritenuta_valore / this.total) + Number.EPSILON) * 100 ) || 0
-
-          if ( this.InvoicedPercentageLeft < 0 ) {
-            this.$notify({type:'danger', message:'Percentuali di fatturato superiori al 100%!'})
-            this.tableData[idx].fatturato_percentuale = 0
-            this.tableData[idx].ritenuta_percentuale = 0
-            this.tableData[idx].ritenuta_valore = 0
-        }
-        }
-        else if (fieldName === 'id_stato') {
-          // console.log(row)
-          }
-        else if (fieldName === 'id_stato') {
-          // console.log(row)
-        }
-      },
-
       beforeSave () {
         return new Promise( (resolve, reject) => {
-          if (this.totaleSal - this.totaleRitenute == this.total) {
+          if (this.totaleFatturato == this.total) {
             resolve(true)
             return
           }
@@ -311,7 +288,7 @@
 
       async handleSave() {
         const beforeSaveRet = await this.beforeSave()
-        console.log(beforeSaveRet)
+
         if (!beforeSaveRet)  return false
 
         const data = {

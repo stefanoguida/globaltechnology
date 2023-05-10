@@ -33,7 +33,7 @@
               <el-table-column prop="impianto" label="Progetto"></el-table-column>
               <el-table-column prop="ragione_sociale" label="Cliente"></el-table-column>
               <el-table-column prop="da_fatturare" label="Da Fatturare" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
-              <el-table-column prop="fatturato" label="Fatturato" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
+              <el-table-column prop="fatturato" label="Fatturato non pagato" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
               <el-table-column prop="pagato" label="Pagato" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
               <el-table-column prop="totale" label="Totale" :formatter="(row, column) => new Intl.NumberFormat('it-IT',{ style: 'currency', currency: 'EUR' }).format(row[column.property])"></el-table-column>
             </el-table>
