@@ -262,7 +262,7 @@
 
       beforeSave () {
         return new Promise( (resolve, reject) => {
-          if (this.totaleFatturato == this.total) {
+          if (this.totaleFatturato.toFixed(2) == this.total.toFixed(2)) {
             resolve(true)
             return
           }
