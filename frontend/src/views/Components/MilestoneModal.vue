@@ -7,15 +7,7 @@
         </div>
         <div class="row">
           <div class="col-5 text-right">
-            <span v-if="percentageLeft < 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
-          </div>
-          <div class="col-2 text-right">
-            <!-- <base-input type="number" step="5" min="0" max="100" label="Ritenuta %" v-model="ritenuta_su_milestones"></base-input> -->
-            <!-- <span>Ritenuta </span>
-            <el-switch
-              v-model="ritenuta_su_milestones"
-              style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-            /> -->
+            <span v-if="InvoicedPercentageLeft <= 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
           </div>
           <div class="col-4 text-right">
             <span>Importo contratto: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(total) }}</span><br />
@@ -24,7 +16,7 @@
             <span>Importo Ritenute: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(totaleRitenute) }}</span>
           </div>
           <div class="col-1 text-right">
-            <base-button @click.native="addNewEmptyRow()" :disabled="percentageLeft<0" class="edit" type="primary" size="sm" icon >
+            <base-button @click.native="addNewEmptyRow()" :disabled="InvoicedPercentageLeft <= 0" class="edit" type="primary" size="sm" icon >
             <i class="ni ni-fat-add"></i>
             </base-button>
           </div>
@@ -64,7 +56,7 @@
         </form>
         <div style="display: flex; flex-wrap: wrap;">
           <div class="text-left" style="width: 50%;">
-            <base-button type="success" class="my-4" @click="addNewEmptyRow(true)">Genera SAL Ritenuta</base-button>
+            <base-button type="success" class="my-4" @click="addNewEmptyRow(true)" :disabled="InvoicedPercentageLeft <= 0 || totaleRitenute == 0">Genera SAL Ritenuta</base-button>
           </div>
           <div class="text-right" style="width: 50%;">
             <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>

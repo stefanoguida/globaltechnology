@@ -149,7 +149,7 @@ export default {
       model: 'metodo_pagamento',
       fields: [],
       propsToSearch: ['name', 'tipo'],
-      tableHiddenFields: ['trec','created_at','created_by','updated_at','updated_by'],
+      tableHiddenFields: ['id','trec','created_at','created_by','updated_at','updated_by'],
       tableColumns: [],
       tableData: [],
       selectedRows: [],

@@ -131,7 +131,7 @@ export default {
       model: 'servizio',
       fields: [],
       propsToSearch: ['name', 'tipo'],
-      tableHiddenFields: ['trec','created_at','created_by','updated_at','updated_by'],
+      tableHiddenFields: ['id','trec','created_at','created_by','updated_at','updated_by'],
       tableColumns: [],
       tableData: [],
       selectedRows: [],
