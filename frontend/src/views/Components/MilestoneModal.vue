@@ -153,7 +153,7 @@
     },
     computed: {
       totaleSal(){
-        return this.tableData.reduce( (acc, curr) => (acc += !curr.ritenuta ? parseFloat(curr.importo_valore || 0) : 0 ), 0)
+        return this.tableData.reduce( (acc, curr) => (acc += !/^SAL [0-9]+ R$/.test(curr.descrizione) ? parseFloat(curr.importo_valore || 0) : 0 ), 0)
       },
       totaleRitenute(){
         return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.importo_valore || 0) - parseFloat(curr.ritenuta_valore || 0) ), 0)
