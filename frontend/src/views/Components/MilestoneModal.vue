@@ -180,8 +180,8 @@
       tableData: {
         handler: function (rows) {
           return rows.map( val => {
-            val.importo_valore = Number(Math.round((this.total * val.importo_percentuale) / 100 + 'e2') + 'e-2')
-            val.ritenuta_valore = Number(Math.round(val.importo_valore - ((val.importo_valore * val.ritenuta_percentuale) / 100) + 'e2') + 'e-2')
+            val.importo_valore = Number(Math.round((this.total * val.importo_percentuale) / 100 + 'e4') + 'e-4')
+            val.ritenuta_valore = Number(Math.round(val.importo_valore - ((val.importo_valore * val.ritenuta_percentuale) / 100) + 'e4') + 'e-4')
             val.fatturato_percentuale = Number(Math.round((val.ritenuta_valore / this.total) * 100 + 'e8') + 'e-8')
 
             if ( this.InvoicedPercentageLeft < 0 ) {
