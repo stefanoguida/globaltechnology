@@ -183,9 +183,22 @@
         } 
 
         await this.$store.dispatch(__.GETWHERE, payload)
+        await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
+        await this.$store.dispatch(__.GETALL, 'metodo_pagamento')
 
         this.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
-        .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','impianto'].includes(f))
+        .filter( f => ![
+          'id',
+          'trec',
+          'created_at',
+          'created_by',
+          'updated_at',
+          'updated_by',
+          'id_contratto',
+          'id_stato',
+          'id_payment_method',
+          'impianto',
+        ].includes(f))
         .map( f => {
           switch(f){
             case 'id':
@@ -220,7 +233,7 @@
                 prop: 'id_stato', 
                 label: f.replace('_',' '),
                 type: 'select',
-                options: this.statusOfferSelectOptions,
+                options: this.$store.getters.statusSelectOptions,
                 minWidth: 100
               }
             case 'tipo_pagamento': 
@@ -229,7 +242,7 @@
                 prop: 'id_payment_method', 
                 label: f.replace('_',' '),
                 type: 'select',
-                options: this.paymentMethodSelectOptions,
+                options: this.$store.getters.paymentMethodSelectOptions,
                 minWidth: 100
               }
             case 'importo_percentuale': 

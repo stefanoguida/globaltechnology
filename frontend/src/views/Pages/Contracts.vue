@@ -259,7 +259,7 @@ export default {
       model: 'contratto',
       title: 'Contratti',
       searchColumns: ['progetto'],
-      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_cliente'],
+      hiddenColumns: ['trec','created_at','created_by','updated_at','updated_by','id_progetto','id_cliente','ritenuta_su_milestones'],
       tableColumns: [],
       originalTableData: [],
       tableData: [],
@@ -297,9 +297,7 @@ export default {
         total: 0
       },
       projectSelectOptions: [],
-      statusOfferSelectOptions: [],
-      customerSelectOptions: [],
-      paymentMethodSelectOptions: []
+      customerSelectOptions: []
     };
   },
   created() {
@@ -356,14 +354,10 @@ export default {
         this.$store.dispatch(__.GETALL,'milestone'),
         this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]}),
         this.$store.dispatch(__.DESCTABLE, 'contratto'),
-        this.$store.dispatch(__.DESCTABLE, 'milestone'),
-        this.$store.dispatch(__.GETALL, 'metodo_pagamento'),
       ])
 
       this.projectSelectOptions = this.$store.getters.projectSelectOptions
-      this.statusOfferSelectOptions = this.$store.getters.statusSelectOptions
       this.customerSelectOptions = this.$store.getters.customerSelectOptions
-      this.paymentMethodSelectOptions = this.$store.getters.paymentMethodSelectOptions
       
       this.allMilestones = this.$store.state.milestone.records
 
