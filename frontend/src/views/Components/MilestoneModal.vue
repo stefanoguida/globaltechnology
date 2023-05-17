@@ -1,13 +1,14 @@
 <template>
   <div>
-    <modal :show.sync="show" size="xl" @close="handleCloseModal" >
+    <modal :show.sync="showModal" size="xl" @close="handleCloseModal" >
       <template>
         <div class="text-muted mb-4">
           <h1>{{title}}</h1>
         </div>
         <div class="row">
           <div class="col-5 text-right">
-            <span v-if="InvoicedPercentageLeft <= 0" class="text-danger text-xs text-monospace">Raggiunto il 100% dell'importo. Non è possibile più aggiungere milestone</span>
+            <span v-if="InvoicedPercentageLeft == 0" class="text-success text-xs text-monospace">Raggiunto il 100% dell'importo</span>
+            <span v-else-if="InvoicedPercentageLeft < 0" class="text-danger text-xs text-monospace">Superato il 100% dell'importo. Ricalcolare le percentuali dei SAL</span>
           </div>
           <div class="col-4 text-right">
             <span>Importo contratto: {{ Intl.NumberFormat('it-IT',{style:'currency', currency:'EUR'}).format(total) }}</span><br />
@@ -33,16 +34,11 @@
               label-class-name="custom-header-class"
             >
               <template slot-scope="scope">
-                <!-- <base-input v-if="column.type == 'select'" :formatter="column.formatter" @blur="handleBlur(column.prop, scope.row)" >
-                  <select class="form-control" v-model="scope.row[column.prop]" filterable>
-                    <option v-for="option in column.options" :value="option.value">{{ option.text }}</option>
-                  </select>
-                </base-input> -->
                 <el-select v-if="column.type == 'select'" v-model="scope.row[column.prop]" filterable>
                   <el-option v-for="option in column.options" :value="option.value" :label="option.text"></el-option>
                 </el-select>
                 <textarea v-else-if="column.type == 'textarea'" v-model="scope.row[column.prop]" class="form-control" rows="1"></textarea>
-                <el-input v-else :type="column.type" v-model="scope.row[column.prop]" :formatter="column.formatter" :disabled="column.disabled"></el-input>
+                <el-input v-else :type="column.type" v-model="scope.row[column.prop]" :formatter="column.formatter" :disabled="column.disabled" @change="handleRowChange(scope.row)"></el-input>
               </template>
             </el-table-column>
             <el-table-column align="right" :min-width="50">
@@ -59,7 +55,7 @@
             <base-button type="success" class="my-4" @click="addNewEmptyRow(true)" :disabled="InvoicedPercentageLeft <= 0 || totaleRitenute == 0">Genera SAL Ritenuta</base-button>
           </div>
           <div class="text-right" style="width: 50%;">
-            <base-button type="primary" class="my-4" @click="show = false">Annulla</base-button>
+            <base-button type="primary" class="my-4" @click="showModal = false">Annulla</base-button>
             <base-button type="primary" class="my-4" @click="handleSave()">Salva</base-button>
           </div>
         </div>
@@ -78,7 +74,7 @@
       </template>
       <template slot="footer"> 
         <div class="text-right">
-          <base-button type="primary" class="my-4" @click="preventCloseModal.show = show = false">Si</base-button>
+          <base-button type="primary" class="my-4" @click="preventCloseModal.show = showModal = false">Si</base-button>
           <base-button type="primary" class="my-4" @click="preventCloseModal.show = false">No</base-button>
         </div>
       </template>
@@ -93,6 +89,8 @@
   import FileInput from '@/components/Inputs/FileInput'
   import * as __ from '../../store/constants'
   import lodash from 'lodash'
+  import moment from 'moment'
+  moment.updateLocale(moment.locale(), { invalidDate: undefined })
 
   export default {
     name: 'MilestoneModal',
@@ -122,14 +120,6 @@
         type: Boolean,
         default: false
       },
-      tableColumns:{
-        type: Array,
-        default: []
-      },
-      tableData: {
-        type: Array,
-        default: []
-      },
       total: {
         type: Number,
         default: 0
@@ -144,6 +134,15 @@
       }
     },
     computed: {
+      showModal:{
+        get(){
+          return this.show
+        },
+        set(val){
+          this.$emit("update:show", val);
+          this.$emit("close");
+        }
+      },
       totaleSal(){
         return this.tableData.reduce( (acc, curr) => (acc += !/^SAL [0-9]+ R$/.test(curr.descrizione) ? parseFloat(curr.importo_valore || 0) : 0 ), 0)
       },
@@ -158,11 +157,11 @@
         return 100 - tot_percentage 
       },
       holdPercentageLeft(){
-        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.ritenuta_percentuale || 0) ), 0)
+        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.ritenuta_percentuale || 0) ), 0)
         return 100 - tot_percentage 
       },
       InvoicedPercentageLeft(){
-        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.fatturato_percentuale || 0) ), 0)
+        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.fatturato_percentuale || 0) ), 0)
         return 100 - tot_percentage 
       }
     },
@@ -175,31 +174,149 @@
           this.$emit("update:show", false);
           this.$emit("close");
         }
-
       },
-      tableData: {
-        handler: function (rows) {
-          return rows.map( val => {
-            val.importo_valore = Number(Math.round((this.total * val.importo_percentuale) / 100 + 'e4') + 'e-4')
-            val.ritenuta_valore = Number(Math.round(val.importo_valore - ((val.importo_valore * val.ritenuta_percentuale) / 100) + 'e4') + 'e-4')
-            val.fatturato_percentuale = Number(Math.round((val.ritenuta_valore / this.total) * 100 + 'e8') + 'e-8')
 
-            if ( this.InvoicedPercentageLeft < 0 ) {
-              this.$notify({type:'danger', message:'Percentuali di fatturato superiori al 100%!'})
-              val.fatturato_percentuale = 0
-              val.ritenuta_percentuale = 0
-              val.ritenuta_valore = 0
-            }
+      async id_contratto(newVal, oldVal) {
+        const payload = {
+          model: 'milestone', 
+          cond: [{field:"id_contratto", op:"=", value: newVal}]
+        } 
 
-            return val
-          })
-        },
-        deep: true
+        await this.$store.dispatch(__.GETWHERE, payload)
+
+        this.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
+        .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','impianto'].includes(f))
+        .map( f => {
+          switch(f){
+            case 'id':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                label: f.replace('_',' '),
+                type: 'text',
+                minWidth: 50,
+                disabled:true
+              }
+            case 'descrizione':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                label: 'ID',
+                type: 'input',
+                minWidth: 100,
+                disabled: true
+              }
+            case 'Note':
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                label: f.replace('_',' '),
+                type: 'textarea',
+                minWidth: 120
+              }
+            case 'stato': 
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: 'id_stato', 
+                label: f.replace('_',' '),
+                type: 'select',
+                options: this.statusOfferSelectOptions,
+                minWidth: 100
+              }
+            case 'tipo_pagamento': 
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: 'id_payment_method', 
+                label: f.replace('_',' '),
+                type: 'select',
+                options: this.paymentMethodSelectOptions,
+                minWidth: 100
+              }
+            case 'importo_percentuale': 
+              return {
+                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                prop: f, 
+                label: 'importo %',
+                type: 'number',
+                minWidth: 90
+              }
+            case 'importo_valore': 
+              return {
+                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                prop: f, 
+                label: 'importo val',
+                type: 'number',
+                disabled:true,
+                minWidth: 120
+              }
+            case 'ritenuta_percentuale': 
+              return {
+                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                prop: f, 
+                label: 'ritenuta %',
+                type: 'number',
+                minWidth: 90
+              }
+            case 'ritenuta_valore': 
+              return {
+                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                prop: f, 
+                label: 'fatturato val',
+                type: 'number',
+                disabled:true,
+                minWidth: 120
+              }
+            case 'fatturato_percentuale': 
+              return {
+                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                prop: f, 
+                label: 'fatturato %',
+                type: 'number',
+                disabled:true,
+                minWidth: 90
+              }
+            case 'data_fatturazione': 
+              return {
+                formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
+                prop: f, 
+                label: f.replace('_',' '),
+                type: 'date',
+                minWidth: 120,
+              }
+            case 'data_pagamento': 
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                label: f.replace('_',' '),
+                type: 'date',
+                minWidth: 120,
+              }
+            default: 
+              return {
+                formatter: (row, column) => row[column.property],
+                prop: f, 
+                label: f.replace('_',' '),
+                type: 'input',
+                editable: true
+              }
+          }
+        })
+
+        this.tableData = (this.$store.state.milestone.records || [])
+        .map( r => (
+          {
+            ... r, 
+            data_fatturazione: moment(r.data_fatturazione).format('YYYY-MM-DD'), 
+            data_pagamento: moment(r.data_pagamento).format('YYYY-MM-DD')
+          }
+        ))
       }
     },
     data(){
       return {
         dataFields: [],
+        tableColumns: [],
+        tableData: [],
         ritenuta_su_milestones: 0,
         preventCloseModal: {
           show: false
@@ -210,14 +327,24 @@
       async init() {
         await this.$store.dispatch(__.DESCTABLE, 'milestone')
       },
-    
+
+      handleRowChange( row ){
+        const idx = this.tableData.findIndex( t => t.id == row.id)
+        if( idx < 0 ) return 
+
+        this.tableData[idx].importo_valore = Number(Math.round((this.total * row.importo_percentuale) / 100 + 'e4') + 'e-4')
+        this.tableData[idx].ritenuta_valore = Number(Math.round(row.importo_valore - ((row.importo_valore * row.ritenuta_percentuale) / 100) + 'e4') + 'e-4')
+        this.tableData[idx].fatturato_percentuale = Number(Math.round((row.ritenuta_valore / this.total) * 100 + 'e8') + 'e-8')
+      },
+
       async handleCloseModal(){
         this.preventCloseModal.show = true
-        this.show = true
+        this.showModal = true
       },
       
       addNewEmptyRow(ritenuta = false) {
         const emptyRow = Object.keys(this.tableData[0]).reduce( (acc,curr) => {
+          const perc = 100 - this.tableData.reduce( (acc, curr) => acc += parseFloat(curr.fatturato_percentuale), 0)
           switch (curr) {
             case 'id_stato':
               acc[curr] = 10
@@ -230,10 +357,13 @@
               break;
             case 'importo_percentuale':
             case 'fatturato_percentuale':
-              acc[curr] = ritenuta ? 100 - this.tableData.reduce( (acc, curr) => acc += curr.fatturato_percentuale, 0) : 0
+              acc[curr] = ritenuta ? perc : 0
               break
             case 'importo_valore':
-              acc[curr] = ritenuta ? this.totale_sal * (this.tableData.reduce( (acc, curr) => acc += curr.fatturato_percentuale, 0) / 100) : 0
+              acc[curr] = ritenuta ? parseFloat(this.totaleSal) * (perc/100) : 0
+              break
+            case 'ritenuta_valore':
+              acc[curr] = ritenuta ? parseFloat(this.totaleSal) * (perc/100): 0
               break
             case 'ritenuta_percentuale':
               acc[curr] = 0
@@ -242,14 +372,11 @@
               acc[curr] = ''
               break;
           }
-          // acc[curr] = curr == 'id_stato' ? 10 : ''
           return acc
         },{})
-        this.tableData.push({...emptyRow, ritenuta: true})
-      // if(ritenuta) {
-      //   this.handleBlur('importo_percentuale', emptyRow)
-      //   this.handleBlur('ritenuta_percentuale', emptyRow)
-      // }
+
+        emptyRow.ritenuta = true
+        this.tableData.push(emptyRow)
       },
 
       beforeSave () {
@@ -265,7 +392,7 @@
             showCancelButton: true,
             confirmButtonClass: 'btn btn-success btn-fill',
             cancelButtonClass: 'btn btn-danger btn-fill',
-            confirmButtonText: 'Si, cancella!',
+            confirmButtonText: 'Salva!',
             cancelButtonText: 'Annulla',
             buttonsStyling: false
           })

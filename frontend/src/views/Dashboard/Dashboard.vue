@@ -2,25 +2,8 @@
   <div>
     <dashboard-header></dashboard-header>
 
-    <!--Charts-->
     <div class="container-fluid mt--6">
       <div class="row">
-        <!-- <div class="col-xl-6">
-          <card type="default" header-classes="bg-transparent">
-            <div slot="header" class="row align-items-center">
-              <div class="col">
-                <h6 class="text-light text-uppercase ls-1 mb-1">Overview</h6>
-                <h5 class="h3 text-white mb-0">Kw/mese ultimi 12 mesi</h5>
-              </div>
-            </div>
-            <line-chart
-              :height="350"
-              ref="bigChart"
-              :chart-data="kwPerMonthChartData"
-            >
-            </line-chart>
-          </card>
-        </div> -->
         <div class="col-xl-12">
           <el-card type="default" header-classes="bg-transparent">
             <div slot="header" class="row align-items-center">
@@ -109,29 +92,6 @@
       return {
         kwPerMonthChartData : null,
         invoicedProjectsData: []
-        // kwPerMonth: {
-        //   chartData: {
-        //     datasets: [
-        //       { label: '2022', data: [10,60,30,60], backgroundColor: '#f87979' }
-        //     ],
-        //     labels: ['gen','feb','mar','apr'],
-        //   },
-        //   extraOptions:{...chartConfigs.basicOptions},
-        // },
-
-        // contractsPerMonth: {
-        //   activeIndex: 0,
-        //   chartData: {
-        //     datasets: [
-        //       {
-        //         label: 'Contratti',
-        //         data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
-        //       }
-        //     ],
-        //     labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        //   },
-        //   extraOptions: chartConfigs.basicOptions,
-        // }
       };
     },
     computed: {
@@ -152,7 +112,6 @@
         await this.$store.dispatch(__.GET_KW_PER_MONTH)
         await this.$store.dispatch(__.GET_INVOICED_PROJECTS)
         this.invoicedProjectsData = this.$store.state.invoiced_projects
-        console.log(this.invoicedProjectsData)
       }
     },
     async mounted() {
@@ -160,4 +119,3 @@
     }
   };
 </script>
-<style></style>

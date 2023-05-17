@@ -81,8 +81,6 @@
     <milestone-modal 
       :show.sync="milestoneModal.show" 
       :editable="milestoneModal.editable"
-      :tableColumns="milestoneModal.tableColumns" 
-      :tableData="milestoneModal.tableData" 
       :id_contratto="milestoneModal.id_reference"
       :total="milestoneModal.total"
       @after-save="handleSaveMilestone">
@@ -138,26 +136,26 @@
                     <div class="cell" v-for="m in allMilestones.filter( m => m.id_contratto == scope.row.id)">
                       <el-tag v-if="m.id_stato == 10" type="danger">
                         {{ m.descrizione }} <br />
-                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.ritenuta_valore)) }}
                       </el-tag>
                       <el-tag v-else-if="m.id_stato == 11" type="warning">
                         {{ m.descrizione }} <br />
-                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.ritenuta_valore)) }}
                       </el-tag>
                       <el-tag v-else-if="m.id_stato == 12" type="success">
                         {{ m.descrizione }} <br />
-                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.ritenuta_valore)) }}
                       </el-tag>
                       <el-tag v-else type="primary">
                         {{ m.descrizione }} <br />
-                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.importo_valore)) }}
+                        {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m.ritenuta_valore)) }}
                       </el-tag>
                     </div>
                   </div>
                   <div class="row">&nbsp;</div>
                   <div class="row">
                     <div class="cell" v-for="m in Object.entries(allMilestones.filter( m => m.id_contratto == scope.row.id).reduce( (acc,curr) => {
-                      acc[curr.id_stato] = acc.hasOwnProperty(curr.id_stato) ? parseFloat(acc[curr.id_stato]) + parseFloat(curr.importo_valore) : parseFloat(curr.importo_valore)
+                      acc[curr.id_stato] = acc.hasOwnProperty(curr.id_stato) ? parseFloat(acc[curr.id_stato]) + parseFloat(curr.ritenuta_valore) : parseFloat(curr.ritenuta_valore)
                       return acc
                     }, {})).sort( (a,b) => b[0] - a[0])">
                       <el-tag v-if="m[0] == 10" type="danger"> {{ (new Intl.NumberFormat('it-IT',{style: 'currency', currency: 'EUR'}).format(m[1])) }} </el-tag>
@@ -474,136 +472,6 @@ export default {
 
     async openMilestoneModal( row ) {
 
-      const payload = {
-        model: 'milestone', 
-        cond: [{field:"id_contratto", op:"=", value:row.id}]
-      } 
-      await this.$store.dispatch(__.GETWHERE, payload)
-
-      this.milestoneModal.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
-      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','impianto'].includes(f))
-      .map( f => {
-        switch(f){
-          case 'id':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'text',
-              minWidth: 50,
-              disabled:true
-            }
-          case 'descrizione':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: 'ID',
-              type: 'input',
-              minWidth: 100,
-              disabled: true
-            }
-          case 'Note':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'textarea',
-              minWidth: 120
-            }
-          case 'stato': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: 'id_stato', 
-              label: f.replace('_',' '),
-              type: 'select',
-              options: this.statusOfferSelectOptions,
-              minWidth: 100
-            }
-          case 'tipo_pagamento': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: 'id_payment_method', 
-              label: f.replace('_',' '),
-              type: 'select',
-              options: this.paymentMethodSelectOptions,
-              minWidth: 100
-            }
-          case 'importo_percentuale': 
-            return {
-              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-              prop: f, 
-              label: 'importo %',
-              type: 'number',
-              minWidth: 90
-            }
-          case 'importo_valore': 
-            return {
-              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-              prop: f, 
-              label: 'importo val',
-              type: 'number',
-              disabled:true,
-              minWidth: 120
-            }
-          case 'ritenuta_percentuale': 
-            return {
-              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-              prop: f, 
-              label: 'ritenuta %',
-              type: 'number',
-              minWidth: 90
-            }
-          case 'ritenuta_valore': 
-            return {
-              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-              prop: f, 
-              label: 'fatturato val',
-              type: 'number',
-              disabled:true,
-              minWidth: 120
-            }
-          case 'fatturato_percentuale': 
-            return {
-              formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-              prop: f, 
-              label: 'fatturato %',
-              type: 'number',
-              disabled:true,
-              minWidth: 90
-            }
-          case 'data_fatturazione': 
-            return {
-              formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'date',
-              minWidth: 120,
-            }
-          case 'data_pagamento': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'date',
-              minWidth: 120,
-            }
-          default: 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'input',
-              editable: true
-            }
-        }
-      })
-      this.milestoneModal.tableData = (this.$store.state.milestone.records || []).map( r => (
-        {
-          ... r, 
-          data_fatturazione: moment(r.data_fatturazione).format('YYYY-MM-DD'), 
-          data_pagamento: moment(r.data_pagamento).format('YYYY-MM-DD')
-        }
-      ))
       this.milestoneModal.id_reference = row.id
       this.milestoneModal.total = parseFloat(row.importo_contrattato)
       this.milestoneModal.show = true

@@ -46,8 +46,6 @@
     <milestone-modal 
       :show.sync="milestoneModal.show" 
       :editable="milestoneModal.editable"
-      :tableColumns="milestoneModal.tableColumns" 
-      :tableData="milestoneModal.tableData" 
       :id_contratto="milestoneModal.id_reference"
       :total="milestoneModal.total"
       @after-save="handleSaveMilestone">
@@ -398,90 +396,6 @@ export default {
 
     async openMilestoneModal( row ) {
       const contratto = this.$store.state.contracts.records.filter( c => c.id_progetto == row.id).pop()
-
-      const payload = {
-        model: 'milestone', 
-        cond: [{field:"id_contratto", op:"=", value:contratto.id}]
-      } 
-      await this.$store.dispatch(__.GETWHERE, payload)
-      if (lodash.isEmpty(this.$store.state.milestone)) {
-        this.$notify({type:'danger', message:'Nessuna milestone truvata'})
-        return false
-      }
-
-      await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
-
-      this.milestoneModal.tableColumns = this.$store.state.tableDescMilestone.fields
-      .filter( f => !['id','trec','created_at','created_by','updated_at','updated_by','id_contratto','id_stato','id_payment_method','data_fatturazione','impianto'].includes(f))
-      .map( f => {
-        switch(f){
-          case 'id':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'input',
-              minWidth: 50,
-              disabled:true
-            }
-          case 'descrizione':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'input',
-              disabled: true
-            }
-          case 'Note':
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'textarea'
-            }
-          case 'stato': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: 'id_stato', 
-              label: f.replace('_',' '),
-              type: 'select',
-              options: this.$store.getters.statusSelectOptions
-            }
-          case 'tipo_pagamento': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: 'id_payment_method', 
-              label: f.replace('_',' '),
-              type: 'select',
-              options: this.paymentMethodSelectOptions
-            }
-          case 'importo_percentuale': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'number'
-            }
-          case 'importo_valore': 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'number',
-              disabled:true
-            }
-          default: 
-            return {
-              formatter: (row, column) => row[column.property],
-              prop: f, 
-              label: f.replace('_',' '),
-              type: 'input',
-              editable: true
-            }
-        }
-      })
-      
-      this.milestoneModal.tableData = this.$store.state.milestone.records
       this.milestoneModal.id_reference = contratto.id
       this.milestoneModal.total = parseFloat(contratto.importo_contrattato)
       this.milestoneModal.show = true
