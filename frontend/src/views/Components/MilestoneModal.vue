@@ -458,7 +458,7 @@
           return 
         }
 
-        const paidMilestones = this.tableData.length ? this.tableData.reduce( (acc, curr) => (acc += [11,12].includes(curr.id_stato) ? curr.importo_percentuale : 0), 0) : 0
+        const paidMilestones = this.tableData.length ? this.tableData.reduce( (acc, curr) => (acc += [11,12].includes(curr.id_stato) ? parseInt(curr.fatturato_percentuale) : 0), 0) : 0
         const completamentoProgetto = paidMilestones
         const projectId = (this.$store.state.contracts.records.filter( c => c.id == this.id_contratto).pop()).id_progetto
 
