@@ -145,7 +145,8 @@ class Model {
                 }, [] ).join(', ')
                 const {condition, values} = this.dbService.evaluateConditions(cond)
                 const stmt = `update ${this.table} set ${set} where ${condition}`
-                await this.dbService.query(stmt, [...Object.values(_data), ...values])
+                const result = await this.dbService.query(stmt, [...Object.values(_data), ...values])
+                return {error: false, code: null, message: "Update succede", data: result}
             }
             return {error: false, code: null, message: "Update succede"}
         }

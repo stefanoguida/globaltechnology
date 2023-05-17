@@ -47,7 +47,6 @@
       </card>
     </modal>
 
-
     <!-- Detail modal-->
     <modal :show.sync="detailModal.show" size="lg" body-classes="p-0">
       <card type="secondary" header-classes="bg-transparent pb-5" body-classes="px-lg-5 py-lg-5" class="border-0 mb-0">
@@ -782,7 +781,7 @@ export default {
       return method === __.INSERT ? response.data.insertId : 0
     },
 
-    async saveProject () {
+    async saveProject (method) {
       const projectFields = ['id_cliente','id_tipo_progetto','luogo','impianto']
       const projectData = lodash.pick(this.modal.data, projectFields)
 
@@ -790,7 +789,13 @@ export default {
         model: 'progetto', 
         payload: {...projectData, id_stato: 13}
       }
-      const response = await this.$store.dispatch(__.INSERT, data)
+      if ( method === __.UPDATE ) {
+        data.cond = [
+          {field: "id_cliente", op: "=", value: projectData.id_cliente}, 
+          {field: "id", op: "=", value: this.modal.data.id_progetto}
+        ]
+      }
+      const response = await this.$store.dispatch(method, data)
       if(response.error) {
         this.$notify({type:'danger', message:"(code: 1) - Errore Creazione offerta!"})
         this.modal.show = false
@@ -886,10 +891,11 @@ export default {
       
       const payload = lodash.omit(this.modal.data, ['id', 'trec', 'created_at', 'created_by', 'updated_at', 'updated_by', 'prezzo_al_kw', 'has_pdf'])
 
-      if( method == __.INSERT ){
-        payload.id_progetto = await this.saveProject()
-      }
-      // se è contrattualizzato
+      // l'id_progetto è valido solo in fase di inserimento. In fasse di aggiornamento sarà sempre 0 e di conseguenza non è da tenere in considerazione
+      payload.id_progetto = await this.saveProject(method)
+      payload.id_progetto = method === __.UPDATE ? this.modal.data.id_progetto : payload.id_progetto
+
+        // se è contrattualizzato
       if ( payload.id_stato == 2 ) {
         payload.data_accettazione = !payload.data_accettazione ? moment().format('YYYY-MM-DD') : moment(payload.data_accettazione).format('YYYY-MM-DD')
         payload.importo_contrattato = !payload.importo_contrattato ? payload.importo_offerto : payload.importo_contrattato
