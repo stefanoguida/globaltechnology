@@ -742,7 +742,9 @@ export default {
           'descrizione':'SAL 1',
           'note':'',
           'importo_percentuale': 100,
+          'fatturato_percentuale': 100,
           'importo_valore': payload.importo_contrattato,
+          'ritenuta_valore': payload.importo_contrattato,
           'id_stato':10
         }
       }

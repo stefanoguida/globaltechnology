@@ -18,7 +18,7 @@
           </div>
           <div class="col-1 text-right">
             <base-button @click.native="addNewEmptyRow()" :disabled="InvoicedPercentageLeft <= 0" class="edit" type="primary" size="sm" icon >
-            <i class="ni ni-fat-add"></i>
+              <i class="ni ni-fat-add"></i>
             </base-button>
           </div>
         </div>
@@ -80,7 +80,7 @@
       </template>
     </modal>
   </div>
-  
+
 </template>
 <script>
   import { Table, TableColumn, Select, Option, Row, Col, Card, Switch } from 'element-ui';
@@ -153,15 +153,15 @@
         return this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.ritenuta_valore || 0) ), 0)
       },
       percentageLeft(){
-        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.importo_percentuale || 0) ), 0)
+        const tot_percentage = this.tableData.reduce( (acc, curr) => (acc += parseInt(curr.importo_percentuale || 0) ), 0)
         return 100 - tot_percentage 
       },
       holdPercentageLeft(){
-        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.ritenuta_percentuale || 0) ), 0)
+        const tot_percentage = this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.ritenuta_percentuale || 0) ), 0)
         return 100 - tot_percentage 
       },
       InvoicedPercentageLeft(){
-        const tot_percentage =  this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.fatturato_percentuale || 0) ), 0)
+        const tot_percentage = this.tableData.reduce( (acc, curr) => (acc += parseFloat(curr.fatturato_percentuale || 0) ), 0)
         return 100 - tot_percentage 
       }
     },
@@ -175,157 +175,8 @@
           this.$emit("close");
         }
       },
-
-      async id_contratto(newVal, oldVal) {
-        const payload = {
-          model: 'milestone', 
-          cond: [{field:"id_contratto", op:"=", value: newVal}]
-        } 
-
-        await this.$store.dispatch(__.GETWHERE, payload)
-        await this.$store.dispatch(__.GETWHERE,{model: 'stato', cond: [{field: 'entita', op: '=', value: 'milestone'}]})
-        await this.$store.dispatch(__.GETALL, 'metodo_pagamento')
-
-        this.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
-        .filter( f => ![
-          'id',
-          'trec',
-          'created_at',
-          'created_by',
-          'updated_at',
-          'updated_by',
-          'id_contratto',
-          'id_stato',
-          'id_payment_method',
-          'impianto',
-        ].includes(f))
-        .map( f => {
-          switch(f){
-            case 'id':
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: f, 
-                label: f.replace('_',' '),
-                type: 'text',
-                minWidth: 50,
-                disabled:true
-              }
-            case 'descrizione':
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: f, 
-                label: 'ID',
-                type: 'input',
-                minWidth: 100,
-                disabled: true
-              }
-            case 'Note':
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: f, 
-                label: f.replace('_',' '),
-                type: 'textarea',
-                minWidth: 120
-              }
-            case 'stato': 
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: 'id_stato', 
-                label: f.replace('_',' '),
-                type: 'select',
-                options: this.$store.getters.statusSelectOptions,
-                minWidth: 100
-              }
-            case 'tipo_pagamento': 
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: 'id_payment_method', 
-                label: f.replace('_',' '),
-                type: 'select',
-                options: this.$store.getters.paymentMethodSelectOptions,
-                minWidth: 100
-              }
-            case 'importo_percentuale': 
-              return {
-                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-                prop: f, 
-                label: 'importo %',
-                type: 'number',
-                minWidth: 90
-              }
-            case 'importo_valore': 
-              return {
-                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-                prop: f, 
-                label: 'importo val',
-                type: 'number',
-                disabled:true,
-                minWidth: 120
-              }
-            case 'ritenuta_percentuale': 
-              return {
-                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-                prop: f, 
-                label: 'ritenuta %',
-                type: 'number',
-                minWidth: 90
-              }
-            case 'ritenuta_valore': 
-              return {
-                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-                prop: f, 
-                label: 'fatturato val',
-                type: 'number',
-                disabled:true,
-                minWidth: 120
-              }
-            case 'fatturato_percentuale': 
-              return {
-                formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
-                prop: f, 
-                label: 'fatturato %',
-                type: 'number',
-                disabled:true,
-                minWidth: 90
-              }
-            case 'data_fatturazione': 
-              return {
-                formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
-                prop: f, 
-                label: f.replace('_',' '),
-                type: 'date',
-                minWidth: 120,
-              }
-            case 'data_pagamento': 
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: f, 
-                label: f.replace('_',' '),
-                type: 'date',
-                minWidth: 120,
-              }
-            default: 
-              return {
-                formatter: (row, column) => row[column.property],
-                prop: f, 
-                label: f.replace('_',' '),
-                type: 'input',
-                editable: true
-              }
-          }
-        })
-
-        this.tableData = (this.$store.state.milestone.records || [])
-        .map( r => (
-          {
-            ... r, 
-            data_fatturazione: moment(r.data_fatturazione).format('YYYY-MM-DD'), 
-            data_pagamento: moment(r.data_pagamento).format('YYYY-MM-DD')
-          }
-        ))
-      }
     },
-    data(){
+    data() {
       return {
         dataFields: [],
         tableColumns: [],
@@ -338,11 +189,161 @@
     },
     methods: {
       async init() {
-        await this.$store.dispatch(__.DESCTABLE, 'milestone')
+
+        const payload = {
+          model: 'milestone',
+          cond: [{ field: "id_contratto", op: "=", value: this.id_contratto }]
+        }
+        await Promise.all([
+          this.$store.dispatch(__.DESCTABLE, 'milestone'),
+          this.$store.dispatch(__.GETWHERE, payload),
+          this.$store.dispatch(__.GETWHERE, { model: 'stato', cond: [{ field: 'entita', op: '=', value: 'milestone' }] }),
+          this.$store.dispatch(__.GETALL, 'metodo_pagamento')
+        ])
+        
+        const paymentMethodSelectOptions = this.$store.getters.paymentMethodSelectOptions.length ? this.$store.getters.paymentMethodSelectOptions : this.$store.state.paymentMethod.records.map( r => ({text: r.name, value: r.id}) )
+
+        this.tableColumns = (this.$store.state.tableDescMilestone.fields || [])
+          .filter(f => ![
+            'id',
+            'trec',
+            'created_at',
+            'created_by',
+            'updated_at',
+            'updated_by',
+            'id_contratto',
+            'id_stato',
+            'id_payment_method',
+            'impianto',
+          ].includes(f))
+          .map(f => {
+            switch (f) {
+              case 'id':
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: f,
+                  label: f.replace('_', ' '),
+                  type: 'text',
+                  minWidth: 50,
+                  disabled: true
+                }
+              case 'descrizione':
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: f,
+                  label: 'ID',
+                  type: 'input',
+                  minWidth: 100,
+                  disabled: true
+                }
+              case 'Note':
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: f,
+                  label: f.replace('_', ' '),
+                  type: 'textarea',
+                  minWidth: 120
+                }
+              case 'stato':
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: 'id_stato',
+                  label: f.replace('_', ' '),
+                  type: 'select',
+                  options: this.$store.getters.statusSelectOptions,
+                  minWidth: 100
+                }
+              case 'tipo_pagamento':
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: 'id_payment_method',
+                  label: f.replace('_', ' '),
+                  type: 'select',
+                  options: paymentMethodSelectOptions,
+                  minWidth: 100
+                }
+              case 'importo_percentuale':
+                return {
+                  formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                  prop: f,
+                  label: 'importo %',
+                  type: 'number',
+                  minWidth: 90
+                }
+              case 'importo_valore':
+                return {
+                  formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                  prop: f,
+                  label: 'importo val',
+                  type: 'number',
+                  disabled: true,
+                  minWidth: 120
+                }
+              case 'ritenuta_percentuale':
+                return {
+                  formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                  prop: f,
+                  label: 'ritenuta %',
+                  type: 'number',
+                  minWidth: 90
+                }
+              case 'ritenuta_valore':
+                return {
+                  formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                  prop: f,
+                  label: 'fatturato val',
+                  type: 'number',
+                  disabled: true,
+                  minWidth: 120
+                }
+              case 'fatturato_percentuale':
+                return {
+                  formatter: (row, column) => new Intl.NumberFormat('it-IT').format(row[column.property]),
+                  prop: f,
+                  label: 'fatturato %',
+                  type: 'number',
+                  disabled: true,
+                  minWidth: 90
+                }
+              case 'data_fatturazione':
+                return {
+                  formatter: (row, column) => moment(row[column.property]).format('DD-MM-YYYY'),
+                  prop: f,
+                  label: f.replace('_', ' '),
+                  type: 'date',
+                  minWidth: 120,
+                }
+              case 'data_pagamento':
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: f,
+                  label: f.replace('_', ' '),
+                  type: 'date',
+                  minWidth: 120,
+                }
+              default:
+                return {
+                  formatter: (row, column) => row[column.property],
+                  prop: f,
+                  label: f.replace('_', ' '),
+                  type: 'input',
+                  editable: true
+                }
+            }
+          })
+          
+        if( !lodash.has(this.$store.state.milestone,'records') || !this.$store.state.milestone.records.length ) this.addNewEmptyRow()
+        else 
+          this.tableData = (this.$store.state.milestone.records || [])
+          .map(r => ({
+            ...r,
+            data_fatturazione: moment(r.data_fatturazione).format('YYYY-MM-DD'),
+            data_pagamento: moment(r.data_pagamento).format('YYYY-MM-DD')
+          }))
       },
 
       handleRowChange( row ){
-        const idx = this.tableData.findIndex( t => t.id == row.id)
+        const idx = this.tableData.findIndex(t => t.descrizione == row.descrizione)
         if( idx < 0 ) return 
 
         this.tableData[idx].importo_valore = Number(Math.round((this.total * row.importo_percentuale) / 100 + 'e4') + 'e-4')
@@ -356,8 +357,8 @@
       },
       
       addNewEmptyRow(ritenuta = false) {
-        const emptyRow = Object.keys(this.tableData[0]).reduce( (acc,curr) => {
-          const perc = 100 - this.tableData.reduce( (acc, curr) => acc += parseFloat(curr.fatturato_percentuale), 0)
+        const emptyRow = Object.values(this.$store.state.tableDescMilestone.fields).reduce( (acc, curr) => {
+          const perc = this.tableData.length ? 100 - this.tableData.reduce((acc, curr) => acc += parseFloat(curr.fatturato_percentuale), 0) : 0
           switch (curr) {
             case 'id_stato':
               acc[curr] = 10
@@ -366,7 +367,7 @@
               acc[curr] = 1
               break;
             case 'descrizione':
-              acc[curr] =  'SAL ' + (parseInt(this.tableData.length) + 1) + (ritenuta ? ' R' : '')
+              acc[curr] = 'SAL ' + (parseInt(this.tableData.length || 0) + 1) + (ritenuta ? ' R' : '')
               break;
             case 'importo_percentuale':
             case 'fatturato_percentuale':
@@ -376,7 +377,7 @@
               acc[curr] = ritenuta ? parseFloat(this.totaleSal) * (perc/100) : 0
               break
             case 'ritenuta_valore':
-              acc[curr] = ritenuta ? parseFloat(this.totaleSal) * (perc/100): 0
+              acc[curr] = ritenuta ? parseFloat(this.totaleSal) * (perc/100) : 0
               break
             case 'ritenuta_percentuale':
               acc[curr] = 0
@@ -386,9 +387,9 @@
               break;
           }
           return acc
-        },{})
+        }, {})
 
-        emptyRow.ritenuta = true
+        emptyRow.ritenuta = ritenuta
         this.tableData.push(emptyRow)
       },
 
@@ -421,7 +422,7 @@
       async handleSave() {
         const beforeSaveRet = await this.beforeSave()
 
-        if (!beforeSaveRet)  return false
+        if (!beforeSaveRet) return false
 
         const data = {
           model: 'milestone', 
