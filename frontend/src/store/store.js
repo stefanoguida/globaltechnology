@@ -355,7 +355,18 @@ const actions = {
         catch ( error ) {
             return error
         }
-    }
+    },
+
+    async [__.GENERATE_ORDERS_FROM_PROJECT]({commit}, project_id) {
+        try {
+            const response = await baseService.generateOrdersFromProject(project_id)
+            commit(__.GENERATE_ORDERS_FROM_PROJECT, response)
+            return response
+        }
+        catch( error ) {
+            return error
+        }
+    } 
 }
 const mutations = {
     [__.LOGIN](state, data) {
@@ -407,6 +418,7 @@ const mutations = {
     [__.DELETE](state, data) {},
     [__.DELETEWHERE](state, data) {},
     [__.DELETEFILE](state, data){},
+    [__.GENERATE_ORDERS_FROM_PROJECT](state, data) {},
 
     [__.GET_RUNNING_OFFERS](state, data) {
         state.kpi.running_offers = data.toString()

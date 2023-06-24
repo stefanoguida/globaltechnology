@@ -844,29 +844,8 @@ export default {
     },
 
     async saveOrders ( id_progetto ) {
-      let data = {
-        model: 'ordine', 
-        payload: {id_progetto, id_stato: 7}, // stato da ordinare
-      }
-      const response = await this.$store.dispatch(__.INSERT,data)
-      const id_ordine = response.data.insertId
-      const id_forniture = this.$store.state.services.records.filter(r => r.tipo == 'fornitura').reduce( (acc, curr) => {
-        acc.push(curr.id)
-        return acc
-      }, [])
-      
-      const righe_ordine = Object.entries(this.modal.choosenServices)
-      .filter( s => s[1] && id_forniture.includes(parseInt(s[0])))
-      .reduce( (acc,curr) => {
-        acc.push({id_ordine, id_servizio: curr[0]})
-        return acc
-      }, [])
-      
-      data = {
-        model: 'riga_ordine',
-        payload: righe_ordine
-      }
-      await this.$store.dispatch(__.INSERT,data)
+      const response = await this.$store.dispatch(__.GENERATE_ORDERS_FROM_PROJECT, id_progetto)
+      console.log(response)
     },
 
     async saveOfferRows () {
@@ -906,10 +885,11 @@ export default {
         const prevState = this.$store.state.offers.records.filter( o => o.id == this.modal.data.id)[0].id_stato || false
         method = prevState == 1  ? __.INSERT : __.UPDATE
         const id_contratto = await this.saveContract( method, payload )
+        
+        await this.saveOrders(payload.id_progetto)
 
         if( method == __.INSERT ) {
           await this.saveMilestone( {id_contratto, importo_contrattato: payload.importo_contrattato} )
-          await this.saveOrders(method, payload.id_progetto)
         }
 
         this.modal.show = false

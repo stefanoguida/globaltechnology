@@ -268,4 +268,16 @@ export default class BaseService {
     }
   }
 
+  async generateOrdersFromProject ( project_id ) {
+    try {
+      this.setHeaders()  
+      const response = await this.axios.post(`${this.SERVICE_URL}generateOrdersFromProject`, {project_id}, {headers: this.headers})
+      return response.data
+    }
+    catch ( error ) {
+      console.log(error)
+      return {}
+    }
+  }
+  
 }

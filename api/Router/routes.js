@@ -25,6 +25,24 @@ const storage = multer.diskStorage({
   })
 const upload = multer({storage: storage})
 
+router.post('/generateOrdersFromProject', async (req, res, next) => {
+    try {
+        const projectId = req.body.project_id || false
+        if( ! projectId ) {
+            res.status(200).json({error:true, code: null, message: 'Missing Project ID'})
+        }
+        else {
+            const Model = factory.getInstanceOf('ordine')
+            const response = await Model.generateOrdersFromProject(projectId)
+            res.status(200).json(response)
+        }
+    } 
+    catch ( error ) {
+        console.log(error)
+        res.json({error: true, code: null, message: error.toString() })
+    }    
+})
+
 router.get('/getContractsPerMonth', async (req, res, next) => {
     try {
         const Model = factory.getInstanceOf('Kpi')
