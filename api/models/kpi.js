@@ -149,7 +149,7 @@ class Kpi extends Model {
                 join progetti p on c.id_progetto = p.id 
                 group by p.id
             ) t 
-            where fatturato < pagato
+            -- where fatturato < pagato
             order by pagato - fatturato
             `
             return await this.dbService.query(stmt)
